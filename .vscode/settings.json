@@ -1,0 +1,9 @@
+{
+  "java.autobuild.enabled": false,
+  "java.import.gradle.enabled": false,
+  "java.server.launchMode": "LightWeight",
+  "gradle.autoDetect": "off",
+  "java.import.exclusions": [
+    "**/android/**"
+  ]
+}
