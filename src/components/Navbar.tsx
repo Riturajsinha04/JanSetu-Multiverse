@@ -1,4 +1,4 @@
-import { Zap, Shield, BarChart2, FileText, User, LogOut, Languages, MapPin, Scale } from 'lucide-react';
+import { Zap, Shield, BarChart2, FileText, LogOut, Languages, MapPin, Scale } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import type { Page } from '../types';
 import { useLang } from '../lib/langContext';
@@ -80,15 +80,7 @@ export default function Navbar({ currentPage, onNavigate, user, onLogout }: Navb
                   <LogOut size={14} />
                 </button>
               </div>
-            ) : (
-              <button
-                onClick={() => onNavigate('login')}
-                className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 border border-gray-200 text-gray-700 text-xs sm:text-sm font-medium rounded-lg hover:bg-gray-50 transition-all"
-              >
-                <User size={14} />
-                <span className="hidden sm:inline">{T.nav_login}</span>
-              </button>
-            )}
+            ) : null}
 
             <button
               onClick={() => onNavigate('submit')}

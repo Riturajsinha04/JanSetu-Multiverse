@@ -25,11 +25,42 @@ export default function App() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-      setAuthLoading(false);
+      const activeUser = data.session?.user ?? null;
+      const localAuth = localStorage.getItem('jansetu_local_auth');
+      if (localAuth) {
+        setUser({
+          id: 'demo-local-id',
+          email: `${localAuth}@jansetu.com`,
+          user_metadata: { full_name: localAuth === 'admin' ? 'Demo Admin' : 'Demo Citizen' }
+        } as any);
+        setAuthLoading(false);
+        setCurrentPage('home');
+      } else {
+        setUser(activeUser);
+        setAuthLoading(false);
+        if (!activeUser) {
+          setCurrentPage('login');
+        }
+      }
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const activeUser = session?.user ?? null;
+      const localAuth = localStorage.getItem('jansetu_local_auth');
+      if (localAuth) {
+        setUser({
+          id: 'demo-local-id',
+          email: `${localAuth}@jansetu.com`,
+          user_metadata: { full_name: localAuth === 'admin' ? 'Demo Admin' : 'Demo Citizen' }
+        } as any);
+        setCurrentPage('home');
+      } else {
+        setUser(activeUser);
+        if (!activeUser) {
+          setCurrentPage('login');
+        } else {
+          setCurrentPage('home');
+        }
+      }
     });
     return () => listener.subscription.unsubscribe();
   }, []);
@@ -41,8 +72,9 @@ export default function App() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
+    localStorage.removeItem('jansetu_local_auth');
     setUser(null);
-    navigate('home');
+    navigate('login');
   }
 
   if (authLoading) {

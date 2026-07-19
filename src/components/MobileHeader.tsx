@@ -1,4 +1,4 @@
-import { ChevronLeft, Languages, LogOut, User } from 'lucide-react';
+import { ChevronLeft, Languages, LogOut } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import type { Page } from '../types';
 import { useLang } from '../lib/langContext';
@@ -67,14 +67,7 @@ export default function MobileHeader({ currentPage, onNavigate, user, onLogout }
             </span>
             <LogOut size={14} className="text-white hidden group-hover:block" />
           </button>
-        ) : (
-          <button
-            onClick={() => onNavigate('login')}
-            className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
-          >
-            <User size={16} className="text-gray-600" />
-          </button>
-        )}
+        ) : null}
       </div>
     </div>
   );

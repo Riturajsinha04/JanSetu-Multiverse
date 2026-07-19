@@ -1,10 +1,9 @@
-import { ScrollView, View, Text, Pressable, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, Pressable, TextInput, ActivityIndicator, StyleSheet } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
   FileText, ChevronRight, ChevronLeft, CheckCircle, Copy,
-  ArrowRight, Sparkles, AlertCircle, User, Building2,
-  Calendar, HelpCircle, Scale, Stamp,
+  ArrowRight, Sparkles, User, Building2, HelpCircle, Scale, Stamp,
 } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useLang } from '../../lib/langContext';
@@ -60,7 +59,7 @@ const INFO_CATEGORIES = [
 
 const PAYMENT_MODES = ['Indian Postal Order (IPO)', 'DD / Banker Cheque', 'Court Fee Stamp', 'Treasury Challan', 'Online Payment'];
 
-const STEP_LABELS = ['Applicant Details', 'Public Authority', 'Information Required', 'Review & Generate'];
+const STEP_LABELS = ['Applicant', 'Public', 'Information', 'Review'];
 
 function generateRTI(form: RTIForm): string {
   const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -90,8 +89,8 @@ INFORMATION SOUGHT:
 ${queryLines.join('\n')}
 
 ${form.isBPL
-  ? `I am a Below Poverty Line (BPL) citizen. My BPL Card Number is ${form.bplCardNumber || '____________________'}. Hence, I am exempted from paying the application fee as per Section 7(5) of the RTI Act, 2005.`
-  : `I am enclosing the prescribed application fee of Rs. 10/- by way of ${form.paymentMode}.`}
+      ? `I am a Below Poverty Line (BPL) citizen. My BPL Card Number is ${form.bplCardNumber || '____________________'}. Hence, I am exempted from paying the application fee as per Section 7(5) of the RTI Act, 2005.`
+      : `I am enclosing the prescribed application fee of Rs. 10/- by way of ${form.paymentMode}.`}
 
 I request that the information be provided within 30 days from the date of receipt of this application as required under Section 7(1) of the RTI Act, 2005.
 
@@ -151,122 +150,139 @@ export default function RTIScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-gradient-to-b from-slate-50 to-orange-50">
-      <View className="p-4 pt-8">
-        <View className="flex-row items-center gap-2 mb-1">
-          <Scale size={16} color="#ea580c" />
-          <Text className="text-xs font-bold text-orange-600 uppercase tracking-widest">{T.rti_badge}</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <View style={styles.content}>
+        {/* Section Header */}
+        <View style={styles.header}>
+          <View style={styles.badgeRow}>
+            <Scale size={16} color="#ea580c" />
+            <Text style={styles.badgeText}>{T.rti_badge || 'CITIZEN LEGAL TOOLS'}</Text>
+          </View>
+          <Text style={styles.title}>{T.rti_title || 'RTI Application Drafter'}</Text>
+          <Text style={styles.subtitle}>
+            {T.rti_subtitle || 'Answer a few simple questions. We instantly generate a legally formatted Right to Information application ready to file under the RTI Act, 2005.'}
+          </Text>
         </View>
-        <Text className="text-3xl font-bold text-gray-900 mb-1">{T.rti_title}</Text>
-        <Text className="text-gray-500 mb-6">{T.rti_subtitle}</Text>
 
-        {/* Progress Steps */}
-        <View className="flex-row mb-6">
+        {/* Progress Tracker */}
+        <View style={styles.stepContainer}>
           {STEP_LABELS.map((label, i) => {
             const n = (i + 1) as Step;
-            const done = step > n;
             const active = step === n;
+            const done = step > n;
             return (
-              <View key={n} className="flex-row items-center flex-1">
-                <View className={`flex-row items-center gap-1 px-2 py-1.5 rounded-xl ${active ? 'bg-orange-500' : done ? 'bg-orange-100' : 'bg-white border border-gray-200'}`}>
-                  <View className={`w-5 h-5 rounded-full items-center justify-center ${active ? 'bg-white/30' : done ? 'bg-orange-500' : 'bg-gray-100'}`}>
-                    {done ? <CheckCircle size={12} color="white" /> : <Text className={`text-xs font-black ${active ? 'text-white' : 'text-gray-400'}`}>{n}</Text>}
-                  </View>
-                  <Text className={`text-xs font-semibold ${active ? 'text-white' : done ? 'text-orange-700' : 'text-gray-400'}`}>{label.split(' ')[0]}</Text>
+              <View key={n} style={styles.stepItem}>
+                <View style={[
+                  styles.stepPill,
+                  active ? styles.stepPillActive : styles.stepPillInactive
+                ]}>
+                  <Text style={[
+                    styles.stepPillText,
+                    active ? styles.stepPillTextActive : styles.stepPillTextInactive
+                  ]}>
+                    {n} {label}
+                  </Text>
                 </View>
-                {i < STEP_LABELS.length - 1 && <View className={`flex-1 h-0.5 ${done ? 'bg-orange-300' : 'bg-gray-200'}`} />}
+                {i < STEP_LABELS.length - 1 && (
+                  <View style={styles.stepLine} />
+                )}
               </View>
             );
           })}
         </View>
 
-        <View className="bg-white rounded-2xl border border-gray-100 p-5 mb-4">
-          {/* Step 1 */}
+        {/* White Form Card */}
+        <View style={styles.card}>
+          {/* Step 1: Applicant Details */}
           {step === 1 && (
             <View>
-              <View className="flex-row items-center gap-2 mb-4">
-                <View className="w-8 h-8 rounded-xl bg-orange-100 items-center justify-center">
+              <View style={styles.cardHeader}>
+                <View style={styles.cardIconBox}>
                   <User size={16} color="#ea580c" />
                 </View>
-                <Text className="font-bold text-gray-900 text-lg">{T.rti_your_details}</Text>
+                <Text style={styles.cardTitle}>{T.rti_your_details || 'Your'}</Text>
               </View>
-              <View className="gap-4">
+
+              <View style={styles.formGap}>
                 <View>
-                  <Text className="text-sm font-semibold text-gray-700 mb-1">{T.rti_full_name} *</Text>
+                  <Text style={styles.inputLabel}>{T.rti_full_name || 'Full Name'} *</Text>
                   <TextInput
                     value={form.applicantName}
                     onChangeText={v => update('applicantName', v)}
-                    placeholder={T.rti_name_placeholder}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-white"
-                    placeholderTextColor="#9ca3af"
+                    placeholder={T.rti_name_placeholder || 'As per identity proof'}
+                    style={styles.input}
+                    placeholderTextColor="#94a3b8"
                   />
                 </View>
+
                 <View>
-                  <Text className="text-sm font-semibold text-gray-700 mb-1">{T.rti_father_name}</Text>
+                  <Text style={styles.inputLabel}>{T.rti_father_name || "Father's / Husband's Name"}</Text>
                   <TextInput
                     value={form.fatherName}
                     onChangeText={v => update('fatherName', v)}
-                    placeholder={T.rti_father_placeholder}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-white"
-                    placeholderTextColor="#9ca3af"
+                    placeholder={T.rti_father_placeholder || 'S/o or W/o'}
+                    style={styles.input}
+                    placeholderTextColor="#94a3b8"
                   />
                 </View>
+
                 <View>
-                  <Text className="text-sm font-semibold text-gray-700 mb-1">{T.rti_address} *</Text>
+                  <Text style={styles.inputLabel}>{T.rti_address || 'Complete Address'} *</Text>
                   <TextInput
                     value={form.address}
                     onChangeText={v => update('address', v)}
-                    placeholder={T.rti_address_placeholder}
+                    placeholder={T.rti_address_placeholder || 'House No., Street, Locality'}
+                    style={[styles.input, styles.textArea]}
                     multiline
                     numberOfLines={2}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-white"
-                    placeholderTextColor="#9ca3af"
-                    style={{ textAlignVertical: 'top' }}
+                    placeholderTextColor="#94a3b8"
                   />
                 </View>
-                <View className="flex-row gap-3">
-                  <View className="flex-1">
-                    <Text className="text-sm font-semibold text-gray-700 mb-1">{T.rti_city} *</Text>
+
+                <View style={styles.row}>
+                  <View style={styles.col}>
+                    <Text style={styles.inputLabel}>{T.rti_city || 'City / District'} *</Text>
                     <TextInput
                       value={form.city}
                       onChangeText={v => update('city', v)}
-                      placeholder={T.rti_city_placeholder}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-white"
-                      placeholderTextColor="#9ca3af"
+                      placeholder={T.rti_city_placeholder || 'Delhi'}
+                      style={styles.input}
+                      placeholderTextColor="#94a3b8"
                     />
                   </View>
-                  <View className="flex-1">
-                    <Text className="text-sm font-semibold text-gray-700 mb-1">{T.rti_state} *</Text>
+                  <View style={styles.col}>
+                    <Text style={styles.inputLabel}>{T.rti_state || 'State'} *</Text>
                     <TextInput
                       value={form.state}
                       onChangeText={v => update('state', v)}
                       placeholder="e.g. Delhi"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-white"
-                      placeholderTextColor="#9ca3af"
+                      style={styles.input}
+                      placeholderTextColor="#94a3b8"
                     />
                   </View>
                 </View>
-                <View className="flex-row gap-3">
-                  <View className="flex-1">
-                    <Text className="text-sm font-semibold text-gray-700 mb-1">{T.rti_pincode}</Text>
+
+                <View style={styles.row}>
+                  <View style={styles.col}>
+                    <Text style={styles.inputLabel}>{T.rti_pincode || 'PIN Code'}</Text>
                     <TextInput
                       value={form.pincode}
                       onChangeText={v => update('pincode', v)}
                       placeholder="110001"
                       keyboardType="numeric"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-white"
-                      placeholderTextColor="#9ca3af"
+                      style={styles.input}
+                      placeholderTextColor="#94a3b8"
                     />
                   </View>
-                  <View className="flex-1">
-                    <Text className="text-sm font-semibold text-gray-700 mb-1">{T.rti_mobile}</Text>
+                  <View style={styles.col}>
+                    <Text style={styles.inputLabel}>{T.rti_mobile || 'Mobile Number'}</Text>
                     <TextInput
                       value={form.phone}
                       onChangeText={v => update('phone', v)}
-                      placeholder={T.rti_mobile_placeholder}
+                      placeholder={T.rti_mobile_placeholder || '+91 98765 43210'}
                       keyboardType="phone-pad"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-white"
-                      placeholderTextColor="#9ca3af"
+                      style={styles.input}
+                      placeholderTextColor="#94a3b8"
                     />
                   </View>
                 </View>
@@ -274,171 +290,205 @@ export default function RTIScreen() {
             </View>
           )}
 
-          {/* Step 2 */}
+          {/* Step 2: Public Authority */}
           {step === 2 && (
             <View>
-              <View className="flex-row items-center gap-2 mb-4">
-                <View className="w-8 h-8 rounded-xl bg-blue-100 items-center justify-center">
-                  <Building2 size={16} color="#2563eb" />
+              <View style={styles.cardHeader}>
+                <View style={styles.cardIconBox}>
+                  <Building2 size={16} color="#ea580c" />
                 </View>
-                <Text className="font-bold text-gray-900 text-lg">{T.rti_authority_title}</Text>
+                <Text style={styles.cardTitle}>{T.rti_authority_title || 'Public Authority'}</Text>
               </View>
-              <View className="gap-4">
+
+              <View style={styles.formGap}>
                 <View>
-                  <Text className="text-sm font-semibold text-gray-700 mb-1">{T.rti_authority_type} *</Text>
-                  <View className="flex-row flex-wrap gap-2">
-                    {AUTHORITY_TYPES.slice(0, 5).map(a => (
+                  <Text style={styles.inputLabel}>{T.rti_authority_type || 'Authority Type'} *</Text>
+                  <View style={styles.chipRow}>
+                    {AUTHORITY_TYPES.map(a => (
                       <Pressable
                         key={a}
                         onPress={() => update('authorityType', a)}
-                        className={`px-3 py-2 rounded-lg ${form.authorityType === a ? 'bg-blue-500' : 'bg-gray-100'}`}
+                        style={[
+                          styles.chip,
+                          form.authorityType === a ? styles.chipActive : styles.chipInactive
+                        ]}
                       >
-                        <Text className={`text-xs font-semibold ${form.authorityType === a ? 'text-white' : 'text-gray-600'}`}>
-                          {T[a].split(' ')[0]}
+                        <Text style={[
+                          styles.chipText,
+                          form.authorityType === a ? styles.chipTextActive : styles.chipTextInactive
+                        ]}>
+                          {T[a] || a}
                         </Text>
                       </Pressable>
                     ))}
                   </View>
                 </View>
+
                 <View>
-                  <Text className="text-sm font-semibold text-gray-700 mb-1">{T.rti_authority_name} *</Text>
+                  <Text style={styles.inputLabel}>{T.rti_authority_name || 'Public Authority Name'} *</Text>
                   <TextInput
                     value={form.authorityName}
                     onChangeText={v => update('authorityName', v)}
-                    placeholder={T.rti_authority_placeholder}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-white"
-                    placeholderTextColor="#9ca3af"
+                    placeholder={T.rti_authority_placeholder || 'e.g. Municipal Corporation of Delhi'}
+                    style={styles.input}
+                    placeholderTextColor="#94a3b8"
                   />
                 </View>
+
                 <View>
-                  <Text className="text-sm font-semibold text-gray-700 mb-1">{T.rti_dept_branch}</Text>
+                  <Text style={styles.inputLabel}>{T.rti_dept_branch || 'Department / Branch'}</Text>
                   <TextInput
                     value={form.department}
                     onChangeText={v => update('department', v)}
-                    placeholder={T.rti_dept_placeholder}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-white"
-                    placeholderTextColor="#9ca3af"
+                    placeholder={T.rti_dept_placeholder || 'e.g. Sanitation Department'}
+                    style={styles.input}
+                    placeholderTextColor="#94a3b8"
                   />
                 </View>
               </View>
             </View>
           )}
 
-          {/* Step 3 */}
+          {/* Step 3: Information Required */}
           {step === 3 && (
             <View>
-              <View className="flex-row items-center gap-2 mb-4">
-                <View className="w-8 h-8 rounded-xl bg-green-100 items-center justify-center">
-                  <HelpCircle size={16} color="#16a34a" />
+              <View style={styles.cardHeader}>
+                <View style={styles.cardIconBox}>
+                  <HelpCircle size={16} color="#ea580c" />
                 </View>
-                <Text className="font-bold text-gray-900 text-lg">{T.rti_query_title}</Text>
+                <Text style={styles.cardTitle}>{T.rti_query_title || 'Information Sought'}</Text>
               </View>
-              <View className="gap-4">
+
+              <View style={styles.formGap}>
                 <View>
-                  <Text className="text-sm font-semibold text-gray-700 mb-1">{T.rti_query_label} *</Text>
+                  <Text style={styles.inputLabel}>{T.rti_query_label || 'Specify Information Required'} *</Text>
                   <TextInput
                     value={form.naturalQuery}
                     onChangeText={v => update('naturalQuery', v)}
-                    placeholder={T.rti_query_placeholder}
+                    placeholder={T.rti_query_placeholder || 'e.g. Status of repair work of street lights in sector 135...'}
                     multiline
                     numberOfLines={4}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-white"
-                    placeholderTextColor="#9ca3af"
-                    style={{ textAlignVertical: 'top' }}
+                    style={[styles.input, styles.textArea, { minHeight: 90 }]}
+                    placeholderTextColor="#94a3b8"
                   />
-                  <Text className="text-xs text-gray-400 mt-1">{form.naturalQuery.length} {T.rti_chars} (min 15)</Text>
+                  <Text style={styles.helpText}>{form.naturalQuery.length} characters (min 15)</Text>
                 </View>
+
                 <View>
-                  <Text className="text-sm font-semibold text-gray-700 mb-2">{T.rti_category}</Text>
-                  <View className="flex-row flex-wrap gap-2">
-                    {INFO_CATEGORIES.slice(0, 4).map(c => (
+                  <Text style={styles.inputLabel}>{T.rti_category || 'Category of Information'}</Text>
+                  <View style={styles.chipRow}>
+                    {INFO_CATEGORIES.map(c => (
                       <Pressable
                         key={c.value}
                         onPress={() => update('infoCategory', c.value)}
-                        className={`px-3 py-2 rounded-lg border ${form.infoCategory === c.value ? 'border-orange-400 bg-orange-50' : 'border-gray-200 bg-white'}`}
+                        style={[
+                          styles.chip,
+                          form.infoCategory === c.value ? styles.chipActive : styles.chipInactive
+                        ]}
                       >
-                        <Text className={`text-xs font-medium ${form.infoCategory === c.value ? 'text-orange-700' : 'text-gray-600'}`}>
-                          {T[c.labelKey].split(' ')[0]}
+                        <Text style={[
+                          styles.chipText,
+                          form.infoCategory === c.value ? styles.chipTextActive : styles.chipTextInactive
+                        ]}>
+                          {T[c.labelKey] || c.value}
                         </Text>
                       </Pressable>
                     ))}
                   </View>
                 </View>
-                <View className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+
+                <View style={styles.checkboxCard}>
                   <Pressable
                     onPress={() => update('isBPL', !form.isBPL)}
-                    className="flex-row items-center gap-2"
+                    style={styles.checkboxRow}
                   >
-                    <View className={`w-5 h-5 rounded border-2 items-center justify-center ${form.isBPL ? 'bg-orange-500 border-orange-500' : 'bg-white border-gray-300'}`}>
+                    <View style={[
+                      styles.checkbox,
+                      form.isBPL ? styles.checkboxChecked : styles.checkboxUnchecked
+                    ]}>
                       {form.isBPL && <CheckCircle size={12} color="white" />}
                     </View>
-                    <Text className="text-sm font-medium text-gray-700">{T.rti_bpl_label}</Text>
+                    <Text style={styles.checkboxLabel}>{T.rti_bpl_label || 'Below Poverty Line (BPL) Citizen'}</Text>
                   </Pressable>
+
+                  {form.isBPL && (
+                    <View style={{ marginTop: 12 }}>
+                      <Text style={styles.inputLabel}>{T.rti_bpl_card || 'BPL Card Number'} *</Text>
+                      <TextInput
+                        value={form.bplCardNumber}
+                        onChangeText={v => update('bplCardNumber', v)}
+                        placeholder="Enter BPL card number"
+                        style={styles.input}
+                        placeholderTextColor="#94a3b8"
+                      />
+                    </View>
+                  )}
                 </View>
               </View>
             </View>
           )}
 
-          {/* Step 4 */}
+          {/* Step 4: Review & Generate */}
           {step === 4 && (
             <View>
-              <View className="flex-row items-center gap-2 mb-4">
-                <View className="w-8 h-8 rounded-xl bg-orange-100 items-center justify-center">
+              <View style={styles.cardHeader}>
+                <View style={styles.cardIconBox}>
                   <Stamp size={16} color="#ea580c" />
                 </View>
-                <Text className="font-bold text-gray-900 text-lg">{T.rti_review_title}</Text>
+                <Text style={styles.cardTitle}>{T.rti_review_title || 'Review & Generate'}</Text>
               </View>
 
-              {/* Summary */}
-              <View className="flex-row gap-3 mb-4">
-                {[
-                  { icon: <User size={14} />, label: T.rti_applicant, value: form.applicantName || '—' },
-                  { icon: <Building2 size={14} />, label: T.rti_authority, value: form.authorityName || '—' },
-                ].map(({ icon, label, value }) => (
-                  <View key={label} className="flex-1 bg-gray-50 rounded-xl p-3">
-                    <View className="flex-row items-center gap-1 text-gray-400 mb-1">{icon}</View>
-                    <Text className="text-sm font-bold text-gray-900" numberOfLines={1}>{value}</Text>
-                    <Text className="text-xs text-gray-400">{label}</Text>
-                  </View>
-                ))}
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryCard}>
+                  <Text style={styles.summaryLabel}>{T.rti_applicant || 'Applicant'}</Text>
+                  <Text style={styles.summaryValue} numberOfLines={1}>{form.applicantName || '—'}</Text>
+                </View>
+                <View style={styles.summaryCard}>
+                  <Text style={styles.summaryLabel}>{T.rti_authority || 'Public Authority'}</Text>
+                  <Text style={styles.summaryValue} numberOfLines={1}>{form.authorityName || '—'}</Text>
+                </View>
               </View>
 
               {!generatedText ? (
                 <Pressable
                   onPress={handleGenerate}
                   disabled={generating}
-                  className={`flex-row items-center justify-center gap-2 py-4 rounded-xl ${generating ? 'bg-gray-300' : 'bg-orange-500'}`}
+                  style={[styles.generateBtn, generating ? styles.generateBtnDisabled : styles.generateBtnActive]}
                 >
                   {generating ? (
                     <ActivityIndicator size="small" color="white" />
                   ) : (
                     <Sparkles size={18} color="white" />
                   )}
-                  <Text className="text-white font-bold">{generating ? T.rti_generating : T.rti_generate_btn}</Text>
+                  <Text style={styles.generateBtnText}>
+                    {generating ? (T.rti_generating || 'Generating...') : (T.rti_generate_btn || 'Generate RTI Application')}
+                  </Text>
                 </Pressable>
               ) : (
-                <View className="gap-4">
-                  <View className="flex-row gap-2">
+                <View style={styles.generatedContainer}>
+                  <View style={styles.actionsRow}>
                     <Pressable
                       onPress={handleCopy}
-                      className={`flex-1 flex-row items-center justify-center gap-2 px-4 py-2.5 rounded-xl border ${copied ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'}`}
+                      style={[styles.actionBtn, copied ? styles.actionBtnCopied : styles.actionBtnNormal]}
                     >
                       {copied ? <CheckCircle size={14} color="#16a34a" /> : <Copy size={14} color="#6b7280" />}
-                      <Text className={`text-sm font-semibold ${copied ? 'text-green-700' : 'text-gray-700'}`}>
-                        {copied ? T.rti_copied : T.rti_copy}
+                      <Text style={[styles.actionBtnText, copied ? { color: '#16a34a' } : { color: '#475569' }]}>
+                        {copied ? (T.rti_copied || 'Copied') : (T.rti_copy || 'Copy Text')}
                       </Text>
                     </Pressable>
                     <Pressable
                       onPress={() => setGeneratedText(null)}
-                      className="flex-row items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-orange-50 border border-orange-100"
+                      style={[styles.actionBtn, styles.actionBtnRegen]}
                     >
                       <Sparkles size={14} color="#ea580c" />
-                      <Text className="text-sm font-semibold text-orange-600">{T.rti_regenerate}</Text>
+                      <Text style={[styles.actionBtnText, { color: '#ea580c' }]}>
+                        {T.rti_regenerate || 'Regenerate'}
+                      </Text>
                     </Pressable>
                   </View>
-                  <View className="bg-gray-50 rounded-xl p-4 max-h-64">
-                    <Text className="text-xs font-bold text-orange-600 mb-2">{T.rti_ready}</Text>
-                    <Text className="text-xs text-gray-700 font-mono leading-relaxed" selectable>{generatedText}</Text>
+                  <View style={styles.readyCard}>
+                    <Text style={styles.readyTitle}>{T.rti_ready || 'Application Draft'}</Text>
+                    <Text style={styles.readyText} selectable>{generatedText}</Text>
                   </View>
                 </View>
               )}
@@ -446,20 +496,29 @@ export default function RTIScreen() {
           )}
         </View>
 
-        {/* Navigation */}
-        <View className="flex-row justify-between items-center">
+        {/* Navigation Action Footer */}
+        <View style={styles.footer}>
           <Pressable
             onPress={() => setStep(s => Math.max(1, s - 1) as Step)}
             disabled={step === 1}
-            className={`flex-row items-center gap-2 px-4 py-2.5 rounded-xl border ${step === 1 ? 'border-gray-100 bg-gray-50' : 'border-gray-200 bg-white'}`}
+            style={[styles.navBtn, step === 1 ? styles.navBtnDisabled : styles.navBtnActive]}
           >
-            <ChevronLeft size={16} color={step === 1 ? '#d1d5db' : '#6b7280'} />
-            <Text className={`text-sm font-semibold ${step === 1 ? 'text-gray-300' : 'text-gray-600'}`}>{T.rti_back}</Text>
+            <ChevronLeft size={16} color={step === 1 ? '#cbd5e1' : '#475569'} />
+            <Text style={[styles.navBtnText, step === 1 ? { color: '#cbd5e1' } : { color: '#475569' }]}>
+              {T.rti_back || 'Back'}
+            </Text>
           </Pressable>
 
-          <View className="flex-row gap-1.5">
+          {/* Dots Indicator */}
+          <View style={styles.dotsRow}>
             {[1, 2, 3, 4].map(s => (
-              <View key={s} className={`h-1.5 rounded-full ${s === step ? 'w-6 bg-orange-500' : s < step ? 'w-3 bg-orange-200' : 'w-3 bg-gray-200'}`} />
+              <View
+                key={s}
+                style={[
+                  styles.dot,
+                  s === step ? styles.dotActive : s < step ? styles.dotDone : styles.dotInactive
+                ]}
+              />
             ))}
           </View>
 
@@ -467,17 +526,21 @@ export default function RTIScreen() {
             <Pressable
               onPress={() => setStep(s => Math.min(4, s + 1) as Step)}
               disabled={!canProceed()}
-              className={`flex-row items-center gap-2 px-5 py-2.5 rounded-xl ${!canProceed() ? 'bg-gray-200' : 'bg-orange-500'}`}
+              style={[styles.nextBtn, !canProceed() ? styles.nextBtnDisabled : styles.nextBtnActive]}
             >
-              <Text className={`text-sm font-semibold ${!canProceed() ? 'text-gray-400' : 'text-white'}`}>{T.rti_next}</Text>
-              <ChevronRight size={16} color={!canProceed() ? '#9ca3af' : 'white'} />
+              <Text style={[styles.nextBtnText, !canProceed() ? { color: '#94a3b8' } : { color: 'white' }]}>
+                {T.rti_next || 'Next'}
+              </Text>
+              <ChevronRight size={16} color={!canProceed() ? '#94a3b8' : 'white'} />
             </Pressable>
           ) : (
             <Pressable
               onPress={() => router.push('/(tabs)/submit')}
-              className="flex-row items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-900"
+              style={[styles.nextBtn, styles.nextBtnActive, { backgroundColor: '#1e293b' }]}
             >
-              <Text className="text-white text-sm font-semibold">{T.rti_file_complaint}</Text>
+              <Text style={[styles.nextBtnText, { color: 'white' }]}>
+                {T.rti_file_complaint || 'File Complaint'}
+              </Text>
               <ArrowRight size={15} color="white" />
             </Pressable>
           )}
@@ -486,3 +549,382 @@ export default function RTIScreen() {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f1f5f9',
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  content: {
+    padding: 16,
+    paddingTop: 12,
+  },
+  // Header
+  header: {
+    marginBottom: 20,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#ea580c',
+    letterSpacing: 1.5,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#0f172a',
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#64748b',
+    lineHeight: 18,
+  },
+  // Step Tracker
+  stepContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  stepPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  stepPillActive: {
+    backgroundColor: '#ea580c',
+    borderColor: '#ea580c',
+  },
+  stepPillInactive: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+  },
+  stepPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  stepPillTextActive: {
+    color: '#ffffff',
+  },
+  stepPillTextInactive: {
+    color: '#64748b',
+  },
+  stepLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#cbd5e1',
+    marginHorizontal: 4,
+  },
+  // Card Form
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 2,
+    marginBottom: 20,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 18,
+  },
+  cardIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#fff7ed',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  formGap: {
+    gap: 16,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#475569',
+    marginBottom: 6,
+  },
+  input: {
+    width: '100%',
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    fontSize: 13,
+    color: '#0f172a',
+    backgroundColor: '#ffffff',
+  },
+  textArea: {
+    height: 72,
+    textAlignVertical: 'top',
+    paddingVertical: 12,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  col: {
+    flex: 1,
+  },
+  // Step 2 & 3 custom elements
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  chip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  chipActive: {
+    borderColor: '#ea580c',
+    backgroundColor: '#fff7ed',
+  },
+  chipInactive: {
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
+  },
+  chipText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  chipTextActive: {
+    color: '#ea580c',
+  },
+  chipTextInactive: {
+    color: '#64748b',
+  },
+  helpText: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginTop: 4,
+  },
+  checkboxCard: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    borderRadius: 12,
+    padding: 12,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#ea580c',
+    borderColor: '#ea580c',
+  },
+  checkboxUnchecked: {
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
+  },
+  checkboxLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  // Step 4 elements
+  summaryRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  summaryCard: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  summaryLabel: {
+    fontSize: 10,
+    color: '#94a3b8',
+    marginBottom: 2,
+  },
+  summaryValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  generateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  generateBtnActive: {
+    backgroundColor: '#ea580c',
+  },
+  generateBtnDisabled: {
+    backgroundColor: '#cbd5e1',
+  },
+  generateBtnText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  generatedContainer: {
+    gap: 12,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  actionBtnNormal: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+  },
+  actionBtnCopied: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0',
+  },
+  actionBtnRegen: {
+    backgroundColor: '#fff7ed',
+    borderColor: '#ffedd5',
+  },
+  actionBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  readyCard: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    maxHeight: 180,
+  },
+  readyTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#ea580c',
+    marginBottom: 8,
+  },
+  readyText: {
+    fontSize: 11,
+    color: '#334155',
+    fontFamily: 'monospace',
+    lineHeight: 16,
+  },
+  // Footer
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  navBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  navBtnActive: {
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
+  },
+  navBtnDisabled: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#f1f5f9',
+  },
+  navBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  dot: {
+    height: 6,
+    borderRadius: 3,
+  },
+  dotActive: {
+    width: 18,
+    backgroundColor: '#ea580c',
+  },
+  dotDone: {
+    width: 6,
+    backgroundColor: '#fed7aa',
+  },
+  dotInactive: {
+    width: 6,
+    backgroundColor: '#cbd5e1',
+  },
+  nextBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  nextBtnActive: {
+    backgroundColor: '#ea580c',
+  },
+  nextBtnDisabled: {
+    backgroundColor: '#e2e8f0',
+  },
+  nextBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+});

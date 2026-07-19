@@ -30,7 +30,10 @@
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.ACCESS_COARSE_LOCATION"
       ]
     },
     "web": {
@@ -57,6 +60,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "9e69bdbb-977b-42b2-adf8-03bc5e1e87f0"
+      }
     }
   }
 }

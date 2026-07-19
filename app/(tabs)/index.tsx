@@ -1,4 +1,4 @@
-import { ScrollView, View, Text, Pressable, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, Pressable, ActivityIndicator, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link } from 'expo-router';
 import {
@@ -10,37 +10,31 @@ import { useEffect, useState } from 'react';
 import { getAllComplaints, type Neo4jComplaint } from '../../lib/neo4j';
 import { useLang } from '../../lib/langContext';
 
-const ISSUE_ICONS: Record<string, React.ReactNode> = {
-  'Street Light': <Lightbulb size={18} color="#eab308" />,
-  'Road Damage': <Construction size={18} color="#f97316" />,
-  'Waste Management': <Truck size={18} color="#16a34a" />,
-  'Water Supply': <Droplet size={18} color="#3b82f6" />,
-  'Sewage': <Droplet size={18} color="#6b7280" />,
-  'Electricity Hazard': <Zap size={18} color="#ca8a04" />,
-  'Sanitation': <Activity size={18} color="#14b8a6" />,
-  'Healthcare': <Activity size={18} color="#ef4444" />,
+const ISSUE_TYPE_CONFIG: Record<string, { icon: React.ReactNode, bg: string, color: string }> = {
+  'Street Light': { icon: <Lightbulb size={16} color="#ca8a04" />, bg: '#fef9c3', color: '#ca8a04' },
+  'Road Damage': { icon: <Construction size={16} color="#ea580c" />, bg: '#ffedd5', color: '#ea580c' },
+  'Waste Management': { icon: <Truck size={16} color="#16a34a" />, bg: '#dcfce7', color: '#16a34a' },
+  'Water Supply': { icon: <Droplet size={16} color="#2563eb" />, bg: '#dbeafe', color: '#2563eb' },
+  'Sewage': { icon: <Droplet size={16} color="#4b5563" />, bg: '#f3f4f6', color: '#4b5563' },
+  'Electricity Hazard': { icon: <Zap size={16} color="#ca8a04" />, bg: '#fef9c3', color: '#ca8a04' },
+  'Sanitation': { icon: <Activity size={16} color="#0d9488" />, bg: '#ccfbf1', color: '#0d9488' },
+  'Healthcare': { icon: <Activity size={16} color="#dc2626" />, bg: '#fee2e2', color: '#dc2626' },
+  'default': { icon: <FileText size={16} color="#4b5563" />, bg: '#f3f4f6', color: '#4b5563' },
 };
 
-const URGENCY_COLORS = {
-  LOW: 'bg-blue-100',
-  MEDIUM: 'bg-yellow-100',
-  HIGH: 'bg-orange-100',
-  CRITICAL: 'bg-red-100',
-};
-
-const URGENCY_TEXT = {
-  LOW: 'text-blue-700',
-  MEDIUM: 'text-yellow-700',
-  HIGH: 'text-orange-700',
-  CRITICAL: 'text-red-700',
+const URGENCY_STYLES = {
+  LOW: { bg: '#dbeafe', text: '#1d4ed8' },
+  MEDIUM: { bg: '#fef9c3', text: '#b45309' },
+  HIGH: { bg: '#ffedd5', text: '#c2410c' },
+  CRITICAL: { bg: '#fee2e2', text: '#b91c1c' },
 };
 
 const STATUS_COLORS = {
-  PENDING: 'text-yellow-600',
-  ASSIGNED: 'text-blue-600',
-  IN_PROGRESS: 'text-indigo-600',
-  RESOLVED: 'text-green-600',
-  ESCALATED: 'text-red-600',
+  PENDING: '#ca8a04',
+  ASSIGNED: '#2563eb',
+  IN_PROGRESS: '#4f46e5',
+  RESOLVED: '#16a34a',
+  ESCALATED: '#dc2626',
 };
 
 export default function HomeScreen() {
@@ -69,12 +63,12 @@ export default function HomeScreen() {
   }, []);
 
   const features = [
-    { icon: <Brain size={22} color="#8b5cf6" />, title: T.feat1_title, desc: T.feat1_desc, bg: 'bg-violet-100' },
-    { icon: <GitBranch size={22} color="#3b82f6" />, title: T.feat2_title, desc: T.feat2_desc, bg: 'bg-blue-100' },
-    { icon: <MapPin size={22} color="#22c55e" />, title: T.feat3_title, desc: T.feat3_desc, bg: 'bg-green-100' },
-    { icon: <Bell size={22} color="#f97316" />, title: T.feat4_title, desc: T.feat4_desc, bg: 'bg-orange-100' },
-    { icon: <BarChart2 size={22} color="#14b8a6" />, title: T.feat5_title, desc: T.feat5_desc, bg: 'bg-teal-100' },
-    { icon: <Shield size={22} color="#ef4444" />, title: T.feat6_title, desc: T.feat6_desc, bg: 'bg-red-100' },
+    { icon: <Brain size={22} color="#8b5cf6" />, title: T.feat1_title, desc: T.feat1_desc, bg: '#f3e8ff' },
+    { icon: <GitBranch size={22} color="#3b82f6" />, title: T.feat2_title, desc: T.feat2_desc, bg: '#dbeafe' },
+    { icon: <MapPin size={22} color="#22c55e" />, title: T.feat3_title, desc: T.feat3_desc, bg: '#dcfce7' },
+    { icon: <Bell size={22} color="#f97316" />, title: T.feat4_title, desc: T.feat4_desc, bg: '#ffedd5' },
+    { icon: <BarChart2 size={22} color="#14b8a6" />, title: T.feat5_title, desc: T.feat5_desc, bg: '#ccfbf1' },
+    { icon: <Shield size={22} color="#ef4444" />, title: T.feat6_title, desc: T.feat6_desc, bg: '#fee2e2' },
   ];
 
   const steps = [
@@ -85,85 +79,85 @@ export default function HomeScreen() {
   ];
 
   return (
-    <ScrollView className="flex-1 bg-white">
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Hero */}
-      <View className="pt-16 pb-10 px-4 bg-gradient-to-b from-orange-50 to-white">
-        <View className="items-center mb-6">
-          <View className="w-20 h-20 rounded-3xl bg-gradient-to-br from-orange-500 to-orange-600 items-center justify-center mb-4 shadow-lg">
-            <Text className="text-white font-black text-2xl">JS</Text>
-          </View>
-        </View>
-
-        <Text className="text-4xl font-extrabold text-gray-900 text-center mb-3">
+      <View style={styles.hero}>
+        <Image
+          source={require('../../assets/app-logo.jpg')}
+          style={styles.heroLogo}
+        />
+        <Text style={styles.heroTitle}>
           {T.hero_title_1}{' '}
-          <Text className="text-orange-500">{T.hero_title_2}</Text>{' '}
-          <Text className="text-green-600">{T.hero_title_3}</Text>
+          <Text style={styles.heroTitleOrange}>{T.hero_title_2}</Text>{' '}
+          <Text style={styles.heroTitleGreen}>{T.hero_title_3}</Text>
         </Text>
 
-        <Text className="text-lg text-gray-500 text-center mb-6 leading-relaxed">
+        <Text style={styles.heroSubtitle}>
           {T.hero_subtitle}
         </Text>
 
-        <View className="flex-row justify-center gap-3 mb-4">
+        <View style={styles.btnRow}>
           <Link href="/submit" asChild>
-            <Pressable className="flex-row items-center gap-2 px-6 py-3 bg-orange-500 rounded-xl active:bg-orange-600">
-              <Text className="text-white font-bold">{T.hero_file_btn}</Text>
-              <ArrowRight size={18} color="white" />
+            <Pressable style={styles.primaryBtn}>
+              <Text style={styles.primaryBtnText}>{T.hero_file_btn}</Text>
+              <ArrowRight size={16} color="white" />
             </Pressable>
           </Link>
           <Link href="/track" asChild>
-            <Pressable className="flex-row items-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-xl active:bg-gray-50">
-              <Text className="text-gray-700 font-semibold">{T.hero_track_btn}</Text>
+            <Pressable style={styles.secondaryBtn}>
+              <Text style={styles.secondaryBtnText}>{T.hero_track_btn}</Text>
             </Pressable>
           </Link>
         </View>
 
         {/* India flag strip */}
-        <View className="flex-row justify-center">
-          <View className="flex-row w-24 h-2 rounded-full overflow-hidden">
-            <View className="flex-1 bg-orange-500" />
-            <View className="flex-1 bg-white border-y border-gray-200" />
-            <View className="flex-1 bg-green-600" />
-          </View>
+        <View style={styles.flagStrip}>
+          <View style={styles.flagOrange} />
+          <View style={styles.flagWhite} />
+          <View style={styles.flagGreen} />
         </View>
-        <Text className="text-xs text-gray-400 text-center mt-2 font-medium">{T.hero_tagline}</Text>
+        <Text style={styles.tagline}>{T.hero_tagline}</Text>
       </View>
 
       {/* Stats */}
-      <View className="bg-gray-900 py-8 px-4">
-        <View className="flex-row flex-wrap justify-center gap-4">
+      <View style={styles.statsSection}>
+        <View style={styles.statsGrid}>
           {[
             { label: T.stat_total, value: stats.total, icon: <Users size={20} color="#fb923c" /> },
             { label: T.stat_resolved, value: stats.resolved, icon: <CheckCircle size={20} color="#4ade80" /> },
             { label: T.stat_pending, value: stats.pending, icon: <Clock size={20} color="#facc15" /> },
             { label: T.stat_escalated, value: stats.escalated, icon: <AlertTriangle size={20} color="#f87171" /> },
           ].map(({ label, value, icon }) => (
-            <View key={label} className="items-center w-20">
-              {icon}
-              <Text className="text-3xl font-extrabold text-white mt-1">{value}</Text>
-              <Text className="text-xs text-gray-400 font-medium text-center">{label}</Text>
+            <View key={label} style={styles.statCard}>
+              <View style={styles.statIconBox}>
+                {icon}
+              </View>
+              <View>
+                <Text style={styles.statValue}>{value}</Text>
+                <Text style={styles.statLabel}>{label}</Text>
+              </View>
             </View>
           ))}
         </View>
       </View>
 
       {/* How it works */}
-      <View className="py-10 px-4">
-        <Text className="text-2xl font-bold text-gray-900 text-center mb-2">{T.how_title}</Text>
-        <Text className="text-gray-500 text-center mb-6">{T.how_subtitle}</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{T.how_title}</Text>
+        <Text style={styles.sectionSubtitle}>{T.how_subtitle}</Text>
 
-        <View className="gap-4">
+        <View style={styles.stepsContainer}>
           {steps.map(({ step, title, desc, icon }) => (
-            <View key={step} className="flex-row items-start gap-4 bg-white border border-gray-100 rounded-2xl p-4">
-              <View className="w-12 h-12 rounded-xl bg-orange-50 items-center justify-center">
+            <View key={step} style={styles.stepCard}>
+              <View style={styles.stepIconBox}>
                 {icon}
               </View>
-              <View className="flex-1">
-                <View className="flex-row items-center gap-2 mb-1">
-                  <Text className="text-xs font-bold text-gray-400">{step}</Text>
-                  <Text className="font-bold text-gray-900">{title}</Text>
+              <View style={styles.stepContent}>
+                <View style={styles.stepHeader}>
+                  <Text style={styles.stepNumber}>{step}</Text>
+                  <Text style={styles.stepTitle}>{title}</Text>
                 </View>
-                <Text className="text-sm text-gray-500">{desc}</Text>
+                <Text style={styles.stepDesc}>{desc}</Text>
               </View>
             </View>
           ))}
@@ -171,19 +165,19 @@ export default function HomeScreen() {
       </View>
 
       {/* Features */}
-      <View className="py-10 px-4 bg-gray-50">
-        <Text className="text-2xl font-bold text-gray-900 text-center mb-2">{T.feat_title}</Text>
-        <Text className="text-gray-500 text-center mb-6">{T.feat_subtitle}</Text>
+      <View style={[styles.section, styles.sectionBg]}>
+        <Text style={styles.sectionTitle}>{T.feat_title}</Text>
+        <Text style={styles.sectionSubtitle}>{T.feat_subtitle}</Text>
 
-        <View className="gap-3">
+        <View style={styles.featuresContainer}>
           {features.map(({ icon, title, desc, bg }) => (
-            <View key={title} className="flex-row items-start gap-4 bg-white rounded-2xl p-4 border border-gray-100">
-              <View className={`w-12 h-12 rounded-xl ${bg} items-center justify-center`}>
+            <View key={title} style={styles.featureCard}>
+              <View style={[styles.featureIconBox, { backgroundColor: bg }]}>
                 {icon}
               </View>
-              <View className="flex-1">
-                <Text className="font-bold text-gray-900 mb-1">{title}</Text>
-                <Text className="text-sm text-gray-500">{desc}</Text>
+              <View style={styles.featureContent}>
+                <Text style={styles.featureTitle}>{title}</Text>
+                <Text style={styles.featureDesc}>{desc}</Text>
               </View>
             </View>
           ))}
@@ -192,117 +186,645 @@ export default function HomeScreen() {
 
       {/* Recent Complaints */}
       {recentComplaints.length > 0 && (
-        <View className="py-10 px-4">
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-xl font-bold text-gray-900">{T.feed_title}</Text>
+        <View style={[styles.section, styles.sectionBg]}>
+          <View style={styles.complaintHeaderRow}>
+            <Text style={styles.complaintTitle}>{T.feed_title}</Text>
             <Link href="/admin" asChild>
-              <Pressable className="flex-row items-center gap-1">
-                <Text className="text-orange-500 font-semibold text-sm">{T.feed_view_all}</Text>
-                <ArrowRight size={14} color="#f97316" />
+              <Pressable style={styles.viewAllBtn}>
+                <Text style={styles.complaintLinkText}>{T.feed_view_all}</Text>
+                <ArrowRight size={14} color="#ea580c" />
               </Pressable>
             </Link>
           </View>
 
-          <View className="gap-3">
-            {recentComplaints.slice(0, 3).map(complaint => (
-              <View key={complaint.id} className="bg-white border border-gray-100 rounded-2xl p-4">
-                <View className="flex-row justify-between items-start mb-2">
-                  <View className="flex-row items-center gap-2">
-                    <View className="w-8 h-8 rounded-lg bg-gray-50 items-center justify-center">
-                      {ISSUE_ICONS[complaint.issue_type] || <FileText size={18} color="#6b7280" />}
+          <View style={styles.complaintsContainer}>
+            {recentComplaints.map(complaint => {
+              const config = ISSUE_TYPE_CONFIG[complaint.type] || ISSUE_TYPE_CONFIG['default'];
+              const dateObj = new Date(complaint.created_at);
+              const yyyy = dateObj.getFullYear();
+              const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+              const dd = String(dateObj.getDate()).padStart(2, '0');
+              const shortId = complaint.id.slice(0, 4).toUpperCase();
+              const formattedId = `JS-${yyyy}${mm}${dd}-${shortId}`;
+
+              const urgency = (complaint.urgency || 'MEDIUM').toUpperCase();
+              const urgencyStyle = URGENCY_STYLES[urgency as keyof typeof URGENCY_STYLES] || URGENCY_STYLES.MEDIUM;
+              const statusColor = STATUS_COLORS[complaint.status as keyof typeof STATUS_COLORS] || '#6b7280';
+
+              return (
+                <View key={complaint.id} style={styles.complaintCard}>
+                  <View style={styles.complaintHeader}>
+                    <View style={styles.complaintTypeRow}>
+                      <View style={[styles.complaintIconContainer, { backgroundColor: config.bg }]}>
+                        {config.icon}
+                      </View>
+                      <View>
+                        <Text style={styles.complaintType}>{complaint.type}</Text>
+                        <Text style={styles.complaintId}>{formattedId}</Text>
+                      </View>
                     </View>
-                    <View>
-                      <Text className="font-bold text-gray-900 text-sm">{complaint.issue_type}</Text>
-                      <Text className="text-gray-400 text-xs">{complaint.complaint_number}</Text>
+                    <View style={[styles.urgencyBadge, { backgroundColor: urgencyStyle.bg }]}>
+                      <Text style={[styles.urgencyText, { color: urgencyStyle.text }]}>
+                        {urgency}
+                      </Text>
                     </View>
                   </View>
-                  <View className={`px-2 py-1 rounded-full ${URGENCY_COLORS[complaint.urgency]}`}>
-                    <Text className={`text-xs font-bold ${URGENCY_TEXT[complaint.urgency]}`}>
-                      {complaint.urgency}
+
+                  <Text style={styles.complaintDesc} numberOfLines={2}>
+                    {complaint.voiceTranscript || complaint.description || '—'}
+                  </Text>
+
+                  <View style={styles.complaintFooter}>
+                    <View style={styles.complaintMetaRow}>
+                      <MapPin size={12} color="#9ca3af" />
+                      <Text style={styles.complaintMetaText} numberOfLines={1}>
+                        {complaint.area}, Ward {complaint.ward}
+                      </Text>
+                    </View>
+                    <Text style={[styles.statusText, { color: statusColor }]}>
+                      {complaint.status.replace('_', ' ').toUpperCase()}
                     </Text>
                   </View>
                 </View>
-                <Text className="text-gray-600 text-sm mb-2" numberOfLines={2}>{complaint.summary}</Text>
-                <View className="flex-row justify-between items-center">
-                  <View className="flex-row items-center gap-1">
-                    <MapPin size={11} color="#9ca3af" />
-                    <Text className="text-gray-400 text-xs">{complaint.area}, {complaint.ward}</Text>
-                  </View>
-                  <Text className={`text-xs font-semibold ${STATUS_COLORS[complaint.status]}`}>
-                    {complaint.status.replace('_', ' ')}
-                  </Text>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         </View>
       )}
 
-      {/* Tools Section */}
-      <View className="py-10 px-4 border-t border-gray-100">
-        <View className="items-center mb-6">
-          <Text className="text-xs font-bold text-orange-600 uppercase tracking-widest mb-1">{T.tools_badge}</Text>
-          <Text className="text-2xl font-bold text-gray-900">{T.tools_title}</Text>
+      {/* Powerful Civic Tools */}
+      <View style={[styles.section, styles.sectionBg]}>
+        <Text style={styles.toolsBadge}>{T.tools_badge}</Text>
+        <Text style={styles.sectionTitle}>{T.tools_title}</Text>
+        <Text style={styles.sectionSubtitle}>{T.tools_subtitle}</Text>
+
+        <View style={styles.toolsCardGrid}>
+          {/* Hazard Map Card */}
+          <Link href="/hazardmap" asChild>
+            <Pressable style={styles.toolCardDark}>
+              <View style={styles.toolHeader}>
+                <View style={styles.toolIconBoxDark}>
+                  <MapPin size={22} color="#f87171" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.toolBadgeDark}>
+                    <Text style={styles.toolBadgeTextDark}>{T.tools_hazard_live}</Text>
+                  </View>
+                  <Text style={styles.toolTitleDark}>{T.tools_hazard_title}</Text>
+                </View>
+              </View>
+              <Text style={styles.toolDescDark}>{T.tools_hazard_desc}</Text>
+            </Pressable>
+          </Link>
+
+          {/* RTI Card */}
+          <Link href="/rti" asChild>
+            <Pressable style={styles.toolCardLight}>
+              <View style={styles.toolHeader}>
+                <View style={styles.toolIconBoxLight}>
+                  <Scale size={22} color="#ea580c" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.toolBadgeLight}>
+                    <Text style={styles.toolBadgeTextLight}>{T.tools_rti_badge}</Text>
+                  </View>
+                  <Text style={styles.toolTitleLight}>{T.tools_rti_title}</Text>
+                </View>
+              </View>
+              <Text style={styles.toolDescLight}>{T.tools_rti_desc}</Text>
+            </Pressable>
+          </Link>
         </View>
-
-        {/* Hazard Map Card */}
-        <Link href="/hazardmap" asChild>
-          <Pressable className="bg-gray-950 border border-gray-800 rounded-2xl p-5 mb-4">
-            <View className="flex-row items-start gap-4">
-              <View className="w-12 h-12 rounded-2xl bg-red-500/20 border border-red-500/30 items-center justify-center">
-                <MapPin size={22} color="#f87171" />
-              </View>
-              <View className="flex-1">
-                <View className="flex-row items-center gap-2 mb-1">
-                  <Text className="text-xs px-2 py-0.5 bg-red-500/20 text-red-400 rounded-full font-bold">{T.tools_hazard_live}</Text>
-                </View>
-                <Text className="text-lg font-bold text-white mb-1">{T.tools_hazard_title}</Text>
-                <Text className="text-gray-400 text-sm" numberOfLines={2}>{T.tools_hazard_desc}</Text>
-              </View>
-            </View>
-          </Pressable>
-        </Link>
-
-        {/* RTI Card */}
-        <Link href="/rti" asChild>
-          <Pressable className="bg-orange-50 border border-orange-100 rounded-2xl p-5">
-            <View className="flex-row items-start gap-4">
-              <View className="w-12 h-12 rounded-2xl bg-orange-100 border border-orange-200 items-center justify-center">
-                <Scale size={22} color="#ea580c" />
-              </View>
-              <View className="flex-1">
-                <View className="flex-row items-center gap-2 mb-1">
-                  <Text className="text-xs px-2 py-0.5 bg-orange-100 text-orange-600 rounded-full font-bold">{T.tools_rti_badge}</Text>
-                </View>
-                <Text className="text-lg font-bold text-gray-900 mb-1">{T.tools_rti_title}</Text>
-                <Text className="text-gray-600 text-sm" numberOfLines={2}>{T.tools_rti_desc}</Text>
-              </View>
-            </View>
-          </Pressable>
-        </Link>
       </View>
 
       {/* CTA */}
-      <View className="py-10 px-4 bg-gradient-to-b from-gray-900 to-gray-800">
-        <Text className="text-xs text-orange-400 text-center mb-2">{T.cta_badge}</Text>
-        <Text className="text-2xl font-bold text-white text-center mb-2">{T.cta_title}</Text>
-        <Text className="text-gray-400 text-center mb-6">{T.cta_subtitle}</Text>
+      <View style={styles.ctaSection}>
+        <Text style={styles.ctaLabel}>{T.cta_badge}</Text>
+        <Text style={styles.ctaText}>{T.cta_subtitle}</Text>
         <Link href="/submit" asChild>
-          <Pressable className="flex-row items-center justify-center gap-2 px-6 py-3 bg-orange-500 rounded-xl mx-auto active:bg-orange-600">
-            <Text className="text-white font-bold">{T.cta_file_btn}</Text>
+          <Pressable style={styles.ctaBtn}>
+            <Text style={styles.ctaBtnText}>{T.cta_file_btn}</Text>
             <ArrowRight size={18} color="white" />
           </Pressable>
         </Link>
       </View>
 
       {/* Footer */}
-      <View className="py-6 px-4 bg-gray-900 border-t border-gray-800">
-        <View className="flex-row justify-center items-center gap-2 mb-2">
-          <Text className="text-white font-black text-lg">Jan</Text>
-          <Text className="text-orange-500 font-black text-lg">Setu</Text>
-        </View>
-        <Text className="text-gray-500 text-xs text-center">{T.footer_tagline}</Text>
+      <View style={styles.homeFooter}>
+        <Text style={styles.homeFooterTitle}>Jan Setu</Text>
+        <Text style={styles.homeFooterText}>{T.footer_tagline} 🇮🇳</Text>
       </View>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  hero: {
+    paddingTop: 20,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    backgroundColor: '#fff7ed', // bg-orange-50
+    alignItems: 'center',
+  },
+  heroLogo: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    marginBottom: 16,
+    resizeMode: 'contain',
+  },
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 10,
+    lineHeight: 36,
+  },
+  heroTitleOrange: {
+    color: '#f97316',
+  },
+  heroTitleGreen: {
+    color: '#16a34a',
+  },
+  heroSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  btnRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+    marginBottom: 16,
+  },
+  primaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#f97316',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  primaryBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  secondaryBtn: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  secondaryBtnText: {
+    color: '#374151',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  flagStrip: {
+    flexDirection: 'row',
+    width: 80,
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    marginTop: 6,
+  },
+  flagOrange: {
+    flex: 1,
+    backgroundColor: '#f97316',
+  },
+  flagWhite: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  flagGreen: {
+    flex: 1,
+    backgroundColor: '#16a34a',
+  },
+  tagline: {
+    fontSize: 10,
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginTop: 6,
+    fontWeight: '500',
+  },
+  statsSection: {
+    backgroundColor: '#111827',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: 12,
+  },
+  statCard: {
+    width: '48%',
+    backgroundColor: '#030712',
+    borderWidth: 1,
+    borderColor: '#1f2937',
+    borderRadius: 14,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#111827',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  statLabel: {
+    fontSize: 10,
+    color: '#9ca3af',
+  },
+  section: {
+    paddingVertical: 32,
+    paddingHorizontal: 16,
+  },
+  sectionBg: {
+    backgroundColor: '#f9fafb',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  stepsContainer: {
+    gap: 12,
+  },
+  stepCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+    borderRadius: 14,
+    padding: 12,
+  },
+  stepIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#fff7ed',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepContent: {
+    flex: 1,
+  },
+  stepHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
+  stepNumber: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#f97316',
+  },
+  stepTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  stepDesc: {
+    fontSize: 12,
+    color: '#6b7280',
+    lineHeight: 16,
+  },
+  featuresContainer: {
+    gap: 12,
+  },
+  featureCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+    borderRadius: 14,
+    padding: 12,
+  },
+  featureIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureContent: {
+    flex: 1,
+  },
+  featureTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  featureDesc: {
+    fontSize: 12,
+    color: '#6b7280',
+    lineHeight: 16,
+  },
+  complaintHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  complaintTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  complaintLinkText: {
+    color: '#ea580c',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  viewAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  complaintsContainer: {
+    gap: 12,
+  },
+  complaintCard: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  complaintHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  complaintTypeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  complaintIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  complaintType: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  complaintId: {
+    fontSize: 11,
+    color: '#9ca3af',
+    marginTop: 1,
+  },
+  urgencyBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  urgencyText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  complaintDesc: {
+    fontSize: 13,
+    color: '#374151',
+    lineHeight: 18,
+    marginVertical: 10,
+  },
+  complaintFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  complaintMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flex: 1,
+  },
+  complaintMetaText: {
+    fontSize: 12,
+    color: '#9ca3af',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  // Tools
+  toolsBadge: {
+    alignSelf: 'center',
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#ea580c',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  toolsCardGrid: {
+    gap: 14,
+    marginTop: 12,
+  },
+  toolCardDark: {
+    backgroundColor: '#030712',
+    borderWidth: 1,
+    borderColor: '#1f2937',
+    borderRadius: 18,
+    padding: 16,
+  },
+  toolCardLight: {
+    backgroundColor: '#fff7ed',
+    borderWidth: 1,
+    borderColor: '#fed7aa',
+    borderRadius: 18,
+    padding: 16,
+  },
+  toolHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  toolIconBoxDark: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toolIconBoxLight: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: '#ffedd5',
+    borderWidth: 1,
+    borderColor: '#fed7aa',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toolBadgeDark: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 99,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
+    marginBottom: 4,
+  },
+  toolBadgeTextDark: {
+    color: '#f87171',
+    fontSize: 8,
+    fontWeight: '700',
+  },
+  toolBadgeLight: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#ffedd5',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 99,
+    borderWidth: 1,
+    borderColor: '#fed7aa',
+    marginBottom: 4,
+  },
+  toolBadgeTextLight: {
+    color: '#ea580c',
+    fontSize: 8,
+    fontWeight: '700',
+  },
+  toolTitleDark: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  toolTitleLight: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  toolDescDark: {
+    fontSize: 12,
+    color: '#9ca3af',
+    lineHeight: 16,
+  },
+  toolDescLight: {
+    fontSize: 12,
+    color: '#4b5563',
+    lineHeight: 16,
+  },
+
+  // CTA
+  ctaSection: {
+    paddingVertical: 32,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
+  },
+  ctaLabel: {
+    fontSize: 12,
+    color: '#ea580c',
+    fontWeight: '600',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  ctaText: {
+    fontSize: 13,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 16,
+    paddingHorizontal: 10,
+  },
+  ctaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#f97316',
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    borderRadius: 10,
+    shadowColor: '#f97316',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  ctaBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+
+  // Home Footer
+  homeFooter: {
+    paddingVertical: 20,
+    backgroundColor: '#0f172a',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  homeFooterTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 2,
+  },
+  homeFooterText: {
+    fontSize: 10,
+    color: '#94a3b8',
+    fontWeight: '500',
+  },
+});

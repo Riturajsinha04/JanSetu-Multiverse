@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, View, Text, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Redirect } from 'expo-router';
 import {
   BarChart2, Users, CheckCircle, Clock, AlertTriangle,
@@ -125,144 +126,145 @@ export default function AdminScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-gray-50"
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={loadData} />}
-    >
-      <View className="p-4 pt-8">
-        {/* Header */}
-        <View className="flex-row justify-between items-start mb-4">
-          <View>
-            <Text className="text-3xl font-bold text-gray-900">{T.admin_title}</Text>
-            <Text className="text-gray-500">{T.admin_subtitle}</Text>
-          </View>
-          <View className="flex-row gap-2">
-            <Pressable
-              onPress={handleEscalationCheck}
-              disabled={escalating}
-              className={`flex-row items-center gap-2 px-4 py-2 border rounded-xl ${escalating ? 'bg-gray-100 border-gray-200' : 'bg-red-50 border-red-100'}`}
-            >
-              <Zap size={14} color={escalating ? '#9ca3af' : '#dc2626'} />
-              <Text className={`text-sm font-semibold ${escalating ? 'text-gray-400' : 'text-red-600'}`}>
-                {escalating ? T.admin_running : T.admin_run_escalation}
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={handleLogout}
-              className="flex-row items-center gap-2 px-4 py-2 bg-gray-900 rounded-xl"
-            >
-              <LogOut size={14} color="white" />
-              <Text className="text-white text-sm font-semibold">{T.admin_exit}</Text>
-            </Pressable>
-          </View>
-        </View>
-
-        {escalationResult && (
-          <View className="flex-row items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-xl mb-4">
-            <Zap size={14} color="#dc2626" />
-            <Text className="text-red-700 text-sm font-medium">{escalationResult}</Text>
-          </View>
-        )}
-
-        {/* Stats Grid */}
-        <View className="flex-row flex-wrap gap-3 mb-4">
-          {[
-            { label: T.admin_stat_total, value: stats.total, icon: <Users size={18} color="#374151" />, bg: 'bg-white' },
-            { label: T.admin_stat_pending, value: stats.pending, icon: <Clock size={18} color="#ca8a04" />, bg: 'bg-yellow-50' },
-            { label: T.admin_stat_active, value: stats.inProgress, icon: <ArrowUpRight size={18} color="#2563eb" />, bg: 'bg-blue-50' },
-            { label: T.admin_stat_resolved, value: stats.resolved, icon: <CheckCircle size={18} color="#16a34a" />, bg: 'bg-green-50' },
-            { label: T.admin_stat_escalated, value: stats.escalated, icon: <AlertTriangle size={18} color="#dc2626" />, bg: 'bg-red-50' },
-            { label: T.admin_stat_critical, value: stats.critical, icon: <Shield size={18} color="#ea580c" />, bg: 'bg-orange-50' },
-          ].map(({ label, value, icon, bg }) => (
-            <View key={label} className={`${bg} rounded-xl border border-gray-100 p-3 flex-1 min-w-[100]`}>
-              {icon}
-              <Text className="text-2xl font-black mt-1">{value}</Text>
-              <Text className="text-xs text-gray-500 font-medium">{label}</Text>
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+      <ScrollView
+        className="flex-1 bg-gray-50"
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={loadData} />}
+      >
+        <View className="p-4 pt-4">
+          {/* Header */}
+          <View className="flex-row justify-between items-start mb-4">
+            <View>
+              <Text className="text-3xl font-bold text-gray-900">{T.admin_title}</Text>
+              <Text className="text-gray-500">{T.admin_subtitle}</Text>
             </View>
-          ))}
-        </View>
-
-        {/* Tabs */}
-        <View className="flex-row gap-1 bg-white border border-gray-100 p-1 rounded-xl mb-4">
-          {(['complaints', 'departments', 'graph'] as const).map(tab => (
-            <Pressable
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-              className={`flex-1 py-2 rounded-lg ${activeTab === tab ? 'bg-orange-500' : 'bg-transparent'}`}
-            >
-              <Text className={`text-sm font-semibold text-center ${activeTab === tab ? 'text-white' : 'text-gray-500'}`}>
-                {tab === 'complaints' ? T.admin_tab_complaints : tab === 'departments' ? T.admin_tab_departments : T.admin_tab_graph}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* Tab Content */}
-        {activeTab === 'complaints' && (
-          <View className="gap-3">
-            {loading ? (
-              <View className="items-center py-10">
-                <ActivityIndicator size="large" color="#f97316" />
-                <Text className="text-gray-400 text-sm mt-3">{T.admin_loading_graph}</Text>
-              </View>
-            ) : complaints.length === 0 ? (
-              <View className="items-center py-10">
-                <BarChart2 size={32} color="#d1d5db" />
-                <Text className="text-gray-400 text-sm mt-2">{T.admin_no_match}</Text>
-              </View>
-            ) : (
-              complaints.slice(0, 20).map(complaint => (
-                <View key={complaint.id} className="bg-white rounded-xl border border-gray-100 p-4">
-                  <View className="flex-row justify-between items-start mb-2">
-                    <View className="flex-row items-center gap-2">
-                      <Text className="font-mono text-xs font-bold text-gray-500">{complaint.complaint_number}</Text>
-                      {complaint.similar_count > 1 && (
-                        <View className="flex-row items-center gap-1">
-                          <GitBranch size={9} color="#22c55e" />
-                          <Text className="text-xs text-green-600 font-semibold">{complaint.similar_count}</Text>
-                        </View>
-                      )}
-                    </View>
-                    <View className={`px-2 py-1 rounded-full border ${URGENCY_CONFIG[complaint.urgency]}`}>
-                      <Text className="text-xs font-bold">{complaint.urgency}</Text>
-                    </View>
-                  </View>
-                  <Text className="font-bold text-gray-900 text-sm">{complaint.issue_type}</Text>
-                  <Text className="text-gray-500 text-xs mb-2" numberOfLines={1}>{complaint.summary}</Text>
-                  <View className="flex-row justify-between items-center">
-                    <View className="flex-row items-center gap-1">
-                      <MapPin size={10} color="#9ca3af" />
-                      <Text className="text-xs text-gray-500">{complaint.area}</Text>
-                    </View>
-                    <View className={`flex-row items-center gap-1 px-2 py-1 rounded-full ${STATUS_CONFIG[complaint.status].color}`}>
-                      <Text className={`text-xs font-semibold ${STATUS_CONFIG[complaint.status].text}`}>
-                        {T[STATUS_CONFIG[complaint.status].labelKey]}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              ))
-            )}
+            <View className="flex-row gap-2">
+              <Pressable
+                onPress={handleEscalationCheck}
+                disabled={escalating}
+                className={`flex-row items-center gap-2 px-4 py-2 border rounded-xl ${escalating ? 'bg-gray-100 border-gray-200' : 'bg-red-50 border-red-100'}`}
+              >
+                <Zap size={14} color={escalating ? '#9ca3af' : '#dc2626'} />
+                <Text className={`text-sm font-semibold ${escalating ? 'text-gray-400' : 'text-red-600'}`}>
+                  {escalating ? T.admin_running : T.admin_run_escalation}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={handleLogout}
+                className="flex-row items-center gap-2 px-4 py-2 bg-gray-900 rounded-xl"
+              >
+                <LogOut size={14} color="white" />
+                <Text className="text-white text-sm font-semibold">{T.admin_exit}</Text>
+              </Pressable>
+            </View>
           </View>
-        )}
 
-        {activeTab === 'departments' && (
-          <View className="gap-3">
-            {loading ? (
-              <View className="items-center py-10">
-                <ActivityIndicator size="large" color="#f97316" />
+          {escalationResult && (
+            <View className="flex-row items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-xl mb-4">
+              <Zap size={14} color="#dc2626" />
+              <Text className="text-red-700 text-sm font-medium">{escalationResult}</Text>
+            </View>
+          )}
+
+          {/* Stats Grid */}
+          <View className="flex-row flex-wrap gap-3 mb-4">
+            {[
+              { label: T.admin_stat_total, value: stats.total, icon: <Users size={18} color="#374151" />, bg: 'bg-white' },
+              { label: T.admin_stat_pending, value: stats.pending, icon: <Clock size={18} color="#ca8a04" />, bg: 'bg-yellow-50' },
+              { label: T.admin_stat_active, value: stats.inProgress, icon: <ArrowUpRight size={18} color="#2563eb" />, bg: 'bg-blue-50' },
+              { label: T.admin_stat_resolved, value: stats.resolved, icon: <CheckCircle size={18} color="#16a34a" />, bg: 'bg-green-50' },
+              { label: T.admin_stat_escalated, value: stats.escalated, icon: <AlertTriangle size={18} color="#dc2626" />, bg: 'bg-red-50' },
+              { label: T.admin_stat_critical, value: stats.critical, icon: <Shield size={18} color="#ea580c" />, bg: 'bg-orange-50' },
+            ].map(({ label, value, icon, bg }) => (
+              <View key={label} className={`${bg} rounded-xl border border-gray-100 p-3 flex-1 min-w-[100]`}>
+                {icon}
+                <Text className="text-2xl font-black mt-1">{value}</Text>
+                <Text className="text-xs text-gray-500 font-medium">{label}</Text>
               </View>
-            ) : departments.length === 0 ? (
-              <View className="items-center py-10 bg-white rounded-xl">
-                <Text className="text-gray-400 text-sm">{T.admin_no_depts}</Text>
-              </View>
-            ) : (
-              departments.map(dept => {
-                const resolutionRate = dept.total_complaints > 0
-                  ? Math.round((dept.resolved_complaints / dept.total_complaints) * 100)
-                  : 0;
-                const trustColor = dept.trust_score >= 75 ? 'text-green-600' : dept.trust_score >= 50 ? 'text-orange-600' : 'text-red-600';
-                return (                  <View key={dept.id} className="bg-white rounded-xl border border-gray-100 p-4">
+            ))}
+          </View>
+
+          {/* Tabs */}
+          <View className="flex-row gap-1 bg-white border border-gray-100 p-1 rounded-xl mb-4">
+            {(['complaints', 'departments', 'graph'] as const).map(tab => (
+              <Pressable
+                key={tab}
+                onPress={() => setActiveTab(tab)}
+                className={`flex-1 py-2 rounded-lg ${activeTab === tab ? 'bg-orange-500' : 'bg-transparent'}`}
+              >
+                <Text className={`text-sm font-semibold text-center ${activeTab === tab ? 'text-white' : 'text-gray-500'}`}>
+                  {tab === 'complaints' ? T.admin_tab_complaints : tab === 'departments' ? T.admin_tab_departments : T.admin_tab_graph}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Tab Content */}
+          {activeTab === 'complaints' && (
+            <View className="gap-3">
+              {loading ? (
+                <View className="items-center py-10">
+                  <ActivityIndicator size="large" color="#f97316" />
+                  <Text className="text-gray-400 text-sm mt-3">{T.admin_loading_graph}</Text>
+                </View>
+              ) : complaints.length === 0 ? (
+                <View className="items-center py-10">
+                  <BarChart2 size={32} color="#d1d5db" />
+                  <Text className="text-gray-400 text-sm mt-2">{T.admin_no_match}</Text>
+                </View>
+              ) : (
+                complaints.slice(0, 20).map(complaint => (
+                  <View key={complaint.id} className="bg-white rounded-xl border border-gray-100 p-4">
+                    <View className="flex-row justify-between items-start mb-2">
+                      <View className="flex-row items-center gap-2">
+                        <Text className="font-mono text-xs font-bold text-gray-500">{complaint.complaint_number}</Text>
+                        {complaint.similar_count > 1 && (
+                          <View className="flex-row items-center gap-1">
+                            <GitBranch size={9} color="#22c55e" />
+                            <Text className="text-xs text-green-600 font-semibold">{complaint.similar_count}</Text>
+                          </View>
+                        )}
+                      </View>
+                      <View className={`px-2 py-1 rounded-full border ${URGENCY_CONFIG[complaint.urgency]}`}>
+                        <Text className="text-xs font-bold">{complaint.urgency}</Text>
+                      </View>
+                    </View>
+                    <Text className="font-bold text-gray-900 text-sm">{complaint.issue_type}</Text>
+                    <Text className="text-gray-500 text-xs mb-2" numberOfLines={1}>{complaint.summary}</Text>
+                    <View className="flex-row justify-between items-center">
+                      <View className="flex-row items-center gap-1">
+                        <MapPin size={10} color="#9ca3af" />
+                        <Text className="text-xs text-gray-500">{complaint.area}</Text>
+                      </View>
+                      <View className={`flex-row items-center gap-1 px-2 py-1 rounded-full ${STATUS_CONFIG[complaint.status].color}`}>
+                        <Text className={`text-xs font-semibold ${STATUS_CONFIG[complaint.status].text}`}>
+                          {T[STATUS_CONFIG[complaint.status].labelKey]}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                ))
+              )}
+            </View>
+          )}
+
+          {activeTab === 'departments' && (
+            <View className="gap-3">
+              {loading ? (
+                <View className="items-center py-10">
+                  <ActivityIndicator size="large" color="#f97316" />
+                </View>
+              ) : departments.length === 0 ? (
+                <View className="items-center py-10 bg-white rounded-xl">
+                  <Text className="text-gray-400 text-sm">{T.admin_no_depts}</Text>
+                </View>
+              ) : (
+                departments.map(dept => {
+                  const resolutionRate = dept.total_complaints > 0
+                    ? Math.round((dept.resolved_complaints / dept.total_complaints) * 100)
+                    : 0;
+                  const trustColor = dept.trust_score >= 75 ? 'text-green-600' : dept.trust_score >= 50 ? 'text-orange-600' : 'text-red-600';
+                  return (<View key={dept.id} className="bg-white rounded-xl border border-gray-100 p-4">
                     <View className="flex-row justify-between items-start mb-3">
                       <Text className="font-bold text-gray-900 flex-1">{dept.name}</Text>
                       <Text className={`text-2xl font-black ${trustColor}`}>{dept.trust_score}%</Text>
@@ -288,46 +290,47 @@ export default function AdminScreen() {
                       </View>
                     </View>
                   </View>
-                );
-              })
-            )}
-          </View>
-        )}
-
-        {activeTab === 'graph' && graphStats && (
-          <View className="gap-4">
-            <View className="flex-row gap-3">
-              {[
-                { label: T.admin_total_nodes, value: graphStats.total, icon: <Network size={20} color="#16a34a" />, bg: 'bg-green-50 border-green-100' },
-                { label: T.admin_clustered, value: graphStats.clustered, icon: <GitBranch size={20} color="#2563eb" />, bg: 'bg-blue-50 border-blue-100' },
-                { label: T.admin_escalated, value: graphStats.escalated, icon: <AlertTriangle size={20} color="#dc2626" />, bg: 'bg-red-50 border-red-100' },
-              ].map(({ label, value, icon, bg }) => (
-                <View key={label} className={`flex-1 rounded-xl border p-4 ${bg}`}>
-                  {icon}
-                  <Text className="text-3xl font-black mt-2">{value}</Text>
-                  <Text className="text-sm font-semibold text-gray-800">{label}</Text>
-                </View>
-              ))}
+                  );
+                })
+              )}
             </View>
+          )}
 
-            {graphStats.hotspots.length > 0 && (
-              <View className="bg-white rounded-xl border border-gray-100 p-4">
-                <View className="flex-row items-center gap-2 mb-3">
-                  <TrendingUp size={18} color="#f97316" />
-                  <Text className="font-bold text-gray-900">{T.admin_hotspots}</Text>
-                </View>
-                {graphStats.hotspots.slice(0, 5).map((h, i) => (
-                  <View key={i} className="flex-row items-center gap-3 mb-2">
-                    <MapPin size={12} color="#f97316" />
-                    <Text className="flex-1 text-sm font-semibold text-gray-700">{h.area}</Text>
-                    <Text className="text-sm font-bold text-gray-900">{h.count}</Text>
+          {activeTab === 'graph' && graphStats && (
+            <View className="gap-4">
+              <View className="flex-row gap-3">
+                {[
+                  { label: T.admin_total_nodes, value: graphStats.total, icon: <Network size={20} color="#16a34a" />, bg: 'bg-green-50 border-green-100' },
+                  { label: T.admin_clustered, value: graphStats.clustered, icon: <GitBranch size={20} color="#2563eb" />, bg: 'bg-blue-50 border-blue-100' },
+                  { label: T.admin_escalated, value: graphStats.escalated, icon: <AlertTriangle size={20} color="#dc2626" />, bg: 'bg-red-50 border-red-100' },
+                ].map(({ label, value, icon, bg }) => (
+                  <View key={label} className={`flex-1 rounded-xl border p-4 ${bg}`}>
+                    {icon}
+                    <Text className="text-3xl font-black mt-2">{value}</Text>
+                    <Text className="text-sm font-semibold text-gray-800">{label}</Text>
                   </View>
                 ))}
               </View>
-            )}
-          </View>
-        )}
-      </View>
-    </ScrollView>
+
+              {graphStats.hotspots.length > 0 && (
+                <View className="bg-white rounded-xl border border-gray-100 p-4">
+                  <View className="flex-row items-center gap-2 mb-3">
+                    <TrendingUp size={18} color="#f97316" />
+                    <Text className="font-bold text-gray-900">{T.admin_hotspots}</Text>
+                  </View>
+                  {graphStats.hotspots.slice(0, 5).map((h, i) => (
+                    <View key={i} className="flex-row items-center gap-3 mb-2">
+                      <MapPin size={12} color="#f97316" />
+                      <Text className="flex-1 text-sm font-semibold text-gray-700">{h.area}</Text>
+                      <Text className="text-sm font-bold text-gray-900">{h.count}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

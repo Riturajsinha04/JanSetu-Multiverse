@@ -1,220 +1,404 @@
-import { View, Text, Pressable, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Pressable, TextInput, ActivityIndicator, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, User, Mail, Lock, Phone } from 'lucide-react-native';
+import { Mail, Lock, Shield, LogIn, User } from 'lucide-react-native';
 import { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { useLang } from '../lib/langContext';
 
 export default function LoginScreen() {
   const { T } = useLang();
   const router = useRouter();
-  const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const [form, setForm] = useState({
-    fullName: '',
-    phone: '',
-    email: '',
+    username: '',
     password: '',
   });
 
   async function handleSubmit() {
     setError('');
 
-    if (isRegister) {
-      if (!form.fullName.trim()) {
-        setError(T.auth_error_name);
-        return;
-      }
-      if (!form.phone.trim() || form.phone.length !== 10) {
-        setError(T.auth_error_phone_invalid);
-        return;
-      }
-      if (!form.password || form.password.length < 6) {
-        setError(T.auth_error_password);
-        return;
-      }
+    const uname = form.username.trim().toLowerCase();
+    const pass = form.password;
 
-      setLoading(true);
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: form.email.trim().toLowerCase(),
-        password: form.password,
-        options: {
-          data: {
-            full_name: form.fullName.trim(),
-            phone: form.phone.trim(),
-          },
-        },
-      });
+    if (!uname || !pass) {
+      setError(T.auth_error_credentials);
+      return;
+    }
+
+    setLoading(true);
+
+    // 1. Check local authentication bypass first
+    if (uname === 'citizen' && pass === '123456') {
+      await AsyncStorage.setItem('jansetu_local_auth', 'citizen');
       setLoading(false);
+      router.replace('/(tabs)');
+      return;
+    }
 
-      if (signUpError) {
-        if (signUpError.message.includes('already registered')) {
-          setError(T.auth_error_registered);
-        } else {
-          setError(signUpError.message);
-        }
-      } else {
-        router.back();
-      }
+    if (uname === 'admin' && pass === '123456') {
+      await AsyncStorage.setItem('jansetu_local_auth', 'admin');
+      setLoading(false);
+      router.replace('/(tabs)');
+      return;
+    }
+
+    // 2. Fallback to Supabase
+    let email = form.username.trim();
+    if (!email.includes('@')) {
+      email = `${email.toLowerCase()}@jansetu.com`;
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.toLowerCase(),
+      password: form.password,
+    });
+    setLoading(false);
+
+    if (signInError) {
+      setError(T.auth_error_credentials);
     } else {
-      if (!form.email.trim() || !form.password) {
-        setError(T.auth_error_credentials);
-        return;
-      }
-
-      setLoading(true);
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: form.email.trim().toLowerCase(),
-        password: form.password,
-      });
-      setLoading(false);
-
-      if (signInError) {
-        setError(T.auth_error_credentials);
-      } else {
-        router.back();
-      }
+      router.replace('/(tabs)');
     }
   }
 
+  function handlePrefill(username: string) {
+    setForm({
+      username: username,
+      password: '123456',
+    });
+  }
+
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="flex-1 p-6">
-        {/* Back */}
-        <Pressable
-          onPress={() => router.back()}
-          className="flex-row items-center gap-1 mb-6"
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <ArrowLeft size={20} color="#6b7280" />
-          <Text className="text-gray-500 text-sm">{T.auth_back_home}</Text>
-        </Pressable>
-
-        {/* Logo */}
-        <View className="items-center mb-8">
-          <View className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 items-center justify-center mb-4">
-            <Text className="text-white font-black text-xl">JS</Text>
-          </View>
-          <Text className="text-xl font-bold text-gray-900 mb-1">
-            {isRegister ? T.auth_register : T.auth_login}
-          </Text>
-          <Text className="text-gray-500 text-sm">{T.auth_subtitle}</Text>
-        </View>
-
-        {/* Tab Switcher */}
-        <View className="flex-row bg-gray-100 rounded-xl p-1 mb-6">
-          <Pressable
-            onPress={() => setIsRegister(false)}
-            className={`flex-1 py-2 rounded-lg ${!isRegister ? 'bg-white shadow-sm' : ''}`}
-          >
-            <Text className={`text-sm font-semibold text-center ${!isRegister ? 'text-gray-900' : 'text-gray-500'}`}>
-              {T.auth_login}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setIsRegister(true)}
-            className={`flex-1 py-2 rounded-lg ${isRegister ? 'bg-white shadow-sm' : ''}`}
-          >
-            <Text className={`text-sm font-semibold text-center ${isRegister ? 'text-gray-900' : 'text-gray-500'}`}>
-              {T.auth_register}
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* Form */}
-        <View className="gap-4">
-          {isRegister && (
-            <View>
-              <Text className="text-sm font-semibold text-gray-700 mb-1">{T.auth_full_name}</Text>
-              <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4">
-                <User size={18} color="#9ca3af" />
-                <TextInput
-                  value={form.fullName}
-                  onChangeText={v => setForm(f => ({ ...f, fullName: v }))}
-                  placeholder={T.auth_full_name}
-                  className="flex-1 py-3 px-3 text-sm"
-                  placeholderTextColor="#9ca3af"
-                />
+          {/* Logo */}
+          <View style={styles.logoSection}>
+            <View style={styles.logoRow}>
+              <View style={styles.logoBox}>
+                <Text style={styles.logoText}>JS</Text>
+              </View>
+              <View>
+                <Text style={styles.logoTitle}>JanSetu</Text>
+                <Text style={styles.logoSubtitle}>MULTIVERSE</Text>
               </View>
             </View>
-          )}
-
-          {isRegister && (
-            <View>
-              <Text className="text-sm font-semibold text-gray-700 mb-1">{T.auth_mobile}</Text>
-              <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4">
-                <Phone size={18} color="#9ca3af" />
-                <TextInput
-                  value={form.phone}
-                  onChangeText={v => setForm(f => ({ ...f, phone: v.replace(/[^0-9]/g, '') }))}
-                  placeholder={T.auth_mobile_placeholder}
-                  keyboardType="phone-pad"
-                  maxLength={10}
-                  className="flex-1 py-3 px-3 text-sm"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
-              <Text className="text-xs text-gray-400 mt-1">{T.auth_mobile_hint}</Text>
-            </View>
-          )}
-
-          <View>
-            <Text className="text-sm font-semibold text-gray-700 mb-1">{T.auth_email}</Text>
-            <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4">
-              <Mail size={18} color="#9ca3af" />
-              <TextInput
-                value={form.email}
-                onChangeText={v => setForm(f => ({ ...f, email: v }))}
-                placeholder={T.auth_email_placeholder}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                className="flex-1 py-3 px-3 text-sm"
-                placeholderTextColor="#9ca3af"
-              />
-            </View>
-          </View>
-
-          <View>
-            <Text className="text-sm font-semibold text-gray-700 mb-1">{T.auth_password}</Text>
-            <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4">
-              <Lock size={18} color="#9ca3af" />
-              <TextInput
-                value={form.password}
-                onChangeText={v => setForm(f => ({ ...f, password: v }))}
-                placeholder={T.auth_password_placeholder}
-                secureTextEntry
-                className="flex-1 py-3 px-3 text-sm"
-                placeholderTextColor="#9ca3af"
-              />
-            </View>
-          </View>
-
-          {error ? (
-            <View className="bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-              <Text className="text-red-600 text-sm">{error}</Text>
-            </View>
-          ) : null}
-
-          <Pressable
-            onPress={handleSubmit}
-            disabled={loading}
-            className={`flex-row items-center justify-center gap-2 py-4 rounded-xl ${loading ? 'bg-gray-300' : 'bg-orange-500'}`}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : null}
-            <Text className="text-white font-bold">
-              {loading
-                ? (isRegister ? T.auth_creating : T.auth_signing_in)
-                : (isRegister ? T.auth_create_account : T.auth_sign_in)}
+            <Text style={styles.tagline}>
+              Sign in to access the civic intelligence platform
             </Text>
-          </Pressable>
-        </View>
+          </View>
 
-        <Text className="text-xs text-gray-400 text-center mt-6">{T.auth_secured}</Text>
-      </View>
+          {/* Card */}
+          <View style={styles.card}>
+            {/* Card Header */}
+            <View style={styles.cardHeader}>
+              <Shield size={14} color="white" />
+              <Text style={styles.cardHeaderLabel}>SECURE LOGIN</Text>
+            </View>
+
+            {/* Card Body */}
+            <View style={styles.cardBody}>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Username</Text>
+                <View style={styles.inputWrapper}>
+                  <Mail size={16} color="#9ca3af" />
+                  <TextInput
+                    value={form.username}
+                    onChangeText={v => setForm(f => ({ ...f, username: v }))}
+                    placeholder="Enter your username"
+                    autoCapitalize="none"
+                    style={styles.input}
+                    placeholderTextColor="#9ca3af"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Password</Text>
+                <View style={styles.inputWrapper}>
+                  <Lock size={16} color="#9ca3af" />
+                  <TextInput
+                    value={form.password}
+                    onChangeText={v => setForm(f => ({ ...f, password: v }))}
+                    placeholder="Enter your password"
+                    secureTextEntry
+                    style={styles.input}
+                    placeholderTextColor="#9ca3af"
+                  />
+                </View>
+              </View>
+
+              {error ? (
+                <View style={styles.errorBox}>
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              ) : null}
+
+              <Pressable
+                onPress={handleSubmit}
+                disabled={loading}
+                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <>
+                    <LogIn size={15} color="white" />
+                    <Text style={styles.submitButtonText}>Sign In</Text>
+                  </>
+                )}
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Demo Credentials Box */}
+          <View style={styles.demoCard}>
+            <Text style={styles.demoTitle}>DEMO CREDENTIALS</Text>
+            
+            <Pressable 
+              onPress={() => handlePrefill('citizen')}
+              style={[styles.demoRow, styles.demoRowBorder]}
+            >
+              <View style={[styles.iconCircle, styles.citizenCircle]}>
+                <User size={14} color="#3b82f6" />
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.demoLabel}>Citizen: </Text>
+                <Text style={styles.demoValue}>ID: citizen / Pass: 123456</Text>
+              </View>
+            </Pressable>
+
+            <Pressable 
+              onPress={() => handlePrefill('admin')}
+              style={styles.demoRow}
+            >
+              <View style={[styles.iconCircle, styles.adminCircle]}>
+                <Shield size={14} color="#a855f7" />
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.demoLabel}>Admin: </Text>
+                <Text style={styles.demoValue}>ID: admin / Pass: 123456</Text>
+              </View>
+            </Pressable>
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <View style={styles.footerDot} />
+            <Text style={styles.footerText}>Secured with local authentication</Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 18,
+    justifyContent: 'center',
+  },
+  logoSection: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  logoBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#f97316',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 16,
+  },
+  logoTitle: {
+    fontWeight: '800',
+    fontSize: 22,
+    color: '#111827',
+  },
+  logoSubtitle: {
+    fontSize: 9,
+    color: '#f97316',
+    fontWeight: '700',
+    letterSpacing: 2,
+    marginTop: 1,
+  },
+  tagline: {
+    color: '#6b7280',
+    fontSize: 11,
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  cardHeader: {
+    backgroundColor: '#f97316',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  cardHeaderLabel: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 10,
+    letterSpacing: 1.5,
+  },
+  cardBody: {
+    padding: 16,
+  },
+  fieldContainer: {
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 4,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 42,
+  },
+  input: {
+    flex: 1,
+    height: '100%',
+    paddingLeft: 8,
+    fontSize: 13,
+    color: '#111827',
+  },
+  errorBox: {
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fee2e2',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  errorText: {
+    color: '#dc2626',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: '#f97316',
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#d1d5db',
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  demoCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    padding: 14,
+    marginBottom: 12,
+  },
+  demoTitle: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#9ca3af',
+    letterSpacing: 1.5,
+    marginBottom: 8,
+  },
+  demoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  demoRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+    paddingBottom: 8,
+    marginBottom: 8,
+  },
+  iconCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  citizenCircle: {
+    backgroundColor: '#eff6ff',
+  },
+  adminCircle: {
+    backgroundColor: '#faf5ff',
+  },
+  demoLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#374151',
+  },
+  demoValue: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  footerDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22c55e',
+  },
+  footerText: {
+    fontSize: 10,
+    color: '#6b7280',
+    fontWeight: '600',
+  },
+});
