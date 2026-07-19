@@ -29,6 +29,7 @@ function CustomHeader() {
 }
 
 export default function TabLayout() {
+  const { T } = useLang();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
@@ -102,35 +103,35 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: T.nav_home || 'Home',
           tabBarIcon: ({ color }) => <Home size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="submit"
         options={{
-          title: 'File',
+          title: T.nav_file || 'File',
           tabBarIcon: ({ color }) => <FileText size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="track"
         options={{
-          title: 'Track',
+          title: T.nav_track || 'Track',
           tabBarIcon: ({ color }) => <Search size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="hazardmap"
         options={{
-          title: 'Hazards',
+          title: T.nav_hazard_map || 'Hazards',
           tabBarIcon: ({ color }) => <MapPin size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="rti"
         options={{
-          title: 'RTI',
+          title: T.nav_rti || 'RTI',
           tabBarIcon: ({ color }) => <Scale size={22} color={color} />,
         }}
       />

@@ -60,7 +60,7 @@ const CUSTOM_RECORDING_OPTIONS: any = {
 };
 
 export default function SubmitScreen() {
-  const { T } = useLang();
+  const { T, lang } = useLang();
   const router = useRouter();
   const [form, setForm] = useState({
     name: '',
@@ -725,9 +725,9 @@ export default function SubmitScreen() {
         
         {/* Photo Upload Container */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Attach Photo (Optional)</Text>
+          <Text style={styles.sectionTitle}>{T.submit_attach_photo || 'Attach Photo (Optional)'}</Text>
           <Text style={styles.sectionSubtitle}>
-            Optionally take a photo or select an image showing the issue.
+            {T.submit_photo_desc || 'Optionally take a photo or select an image showing the issue.'}
           </Text>
 
           <View style={styles.dashedBox}>
@@ -743,24 +743,24 @@ export default function SubmitScreen() {
                   <MapPin size={14} color="#16a34a" style={{ marginRight: 6 }} />
                   {locationCoords ? (
                     <Text style={{ fontSize: 11, color: '#16a34a', fontWeight: '600' }}>
-                      GPS Geotagged: {locationCoords.latitude.toFixed(5)}, {locationCoords.longitude.toFixed(5)}
+                      {T.submit_gps_tagged || 'GPS Geotagged:'} {locationCoords.latitude.toFixed(5)}, {locationCoords.longitude.toFixed(5)}
                     </Text>
                   ) : (
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <ActivityIndicator size="small" color="#16a34a" style={{ marginRight: 6, transform: [{ scale: 0.7 }] }} />
-                      <Text style={{ fontSize: 11, color: '#15803d', fontWeight: '500' }}>Acquiring GPS Coordinates...</Text>
+                      <Text style={{ fontSize: 11, color: '#15803d', fontWeight: '500' }}>{T.submit_acquiring_gps || 'Acquiring GPS Coordinates...'}</Text>
                     </View>
                   )}
                 </View>
 
                 <Pressable onPress={() => { setImageUri(null); setCompressedImage(null); setLocationCoords(null); }} style={styles.removeImageBtn}>
-                  <Text style={styles.removeImageText}>Remove Photo</Text>
+                  <Text style={styles.removeImageText}>{T.submit_remove_photo || 'Remove Photo'}</Text>
                 </Pressable>
               </View>
             ) : (
               <View style={styles.dashedBoxInner}>
                 <ImageIcon size={32} color="#94a3b8" style={{ marginBottom: 8 }} />
-                <Text style={styles.dashedBoxText}>No image selected</Text>
+                <Text style={styles.dashedBoxText}>{T.submit_no_image || 'No image selected'}</Text>
               </View>
             )}
           </View>
@@ -768,18 +768,18 @@ export default function SubmitScreen() {
           <View style={styles.photoBtnRow}>
             <Pressable onPress={takePhoto} style={styles.photoBtn}>
               <CameraIcon size={16} color="#475569" />
-              <Text style={styles.photoBtnText}>Camera</Text>
+              <Text style={styles.photoBtnText}>{T.submit_camera || 'Camera'}</Text>
             </Pressable>
             <Pressable onPress={pickImage} style={styles.photoBtn}>
               <ImageIcon size={16} color="#475569" />
-              <Text style={styles.photoBtnText}>Gallery</Text>
+              <Text style={styles.photoBtnText}>{T.submit_gallery || 'Gallery'}</Text>
             </Pressable>
           </View>
 
           {imageUri && !compressedImage && (
             <View style={styles.compressingRow}>
               <ActivityIndicator size="small" color="#ea580c" />
-              <Text style={styles.compressingText}>Compressing image...</Text>
+              <Text style={styles.compressingText}>{T.submit_compressing || 'Compressing image...'}</Text>
             </View>
           )}
 
@@ -787,7 +787,7 @@ export default function SubmitScreen() {
             <View style={styles.compressedRow}>
               <CheckCircle size={14} color="#10b981" />
               <Text style={styles.compressedText}>
-                Compressed: {formatBytes(compressedImage.originalSize)} → {formatBytes(compressedImage.compressedSize)}
+                {T.submit_compressed || 'Compressed:'} {formatBytes(compressedImage.originalSize)} → {formatBytes(compressedImage.compressedSize)}
               </Text>
             </View>
           )}
@@ -797,7 +797,7 @@ export default function SubmitScreen() {
         <View style={[styles.voiceCard, { zIndex: 20 }]}>
           <View style={styles.voiceCardHeader}>
             <Volume2 size={18} color="#4f46e5" />
-            <Text style={styles.voiceTitle}>Select Language Input</Text>
+            <Text style={styles.voiceTitle}>{T.submit_select_language || 'Select Language Input'}</Text>
           </View>
 
           <View style={styles.voiceCardControlsRow}>
@@ -825,7 +825,7 @@ export default function SubmitScreen() {
               style={[styles.speakBtn, isRecording && { backgroundColor: '#ef4444' }, transcribing && { backgroundColor: '#e2e8f0' }]}
             >
               {isRecording ? <MicOff size={14} color="white" /> : <Mic size={14} color="white" />}
-              <Text style={styles.speakBtnText}>{isRecording ? 'Stop' : 'Speak'}</Text>
+              <Text style={styles.speakBtnText}>{isRecording ? (T.submit_voice_stop || 'Stop') : (T.submit_voice_speak || 'Speak')}</Text>
             </Pressable>
           </View>
 
@@ -852,7 +852,7 @@ export default function SubmitScreen() {
             <View style={styles.recordingRow}>
               <ActivityIndicator size="small" color="#ef4444" />
               <Text style={styles.recordingText}>
-                Listening in {VOICE_LANGUAGES.find(l => l.code === voiceLang)?.label}...
+                {T.submit_listening_in || 'Listening in'} {VOICE_LANGUAGES.find(l => l.code === voiceLang)?.label}...
               </Text>
             </View>
           )}
@@ -861,7 +861,7 @@ export default function SubmitScreen() {
             <View style={styles.recordingRow}>
               <ActivityIndicator size="small" color="#4f46e5" />
               <Text style={[styles.recordingText, { color: '#4f46e5' }]}>
-                Transcribing audio with Sarvam AI...
+                {T.submit_transcribing || 'Transcribing audio with Sarvam AI...'}
               </Text>
             </View>
           )}
@@ -869,17 +869,17 @@ export default function SubmitScreen() {
 
         {/* Complaint Text Container */}
         <View style={styles.card}>
-          <Text style={styles.inputLabel}>Complaint Text *</Text>
+          <Text style={styles.inputLabel}>{T.submit_complaint_text || 'Complaint Text'} *</Text>
           <TextInput
             value={form.text}
             onChangeText={text => { setForm(f => ({ ...f, text })); setAnalysis(null); }}
-            placeholder="e.g. Hamare area mein street light kharab hai aur raat ko unsafe lagta hai... or: The road has a large pothole causing accidents..."
+            placeholder={T.submit_complaint_placeholder || "e.g. Hamare area mein street light kharab hai aur raat ko unsafe lagta hai... or: The road has a large pothole causing accidents..."}
             multiline
             numberOfLines={4}
             style={styles.textArea}
             placeholderTextColor="#9ca3af"
           />
-          <Text style={styles.charCounter}>{form.text.length} characters</Text>
+          <Text style={styles.charCounter}>{form.text.length} {T.submit_characters || 'characters'}</Text>
 
           <Pressable
             onPress={runAnalysis}
@@ -898,7 +898,7 @@ export default function SubmitScreen() {
               styles.analyzeBtnText,
               form.text.length < 10 ? styles.analyzeBtnTextDisabled : styles.analyzeBtnTextActive
             ]}>
-              {analyzing ? 'Analyzing...' : 'Analyze with AI'}
+              {analyzing ? (T.submit_analyzing || 'Analyzing...') : (T.submit_analyze || 'Analyze with AI')}
             </Text>
           </Pressable>
         </View>
@@ -908,33 +908,33 @@ export default function SubmitScreen() {
           <View style={styles.analysisCard}>
             <View style={styles.analysisHeader}>
               <Brain size={18} color="#4f46e5" />
-              <Text style={styles.analysisTitle}>AI Analysis Complete</Text>
+              <Text style={styles.analysisTitle}>{T.submit_analysis_complete || 'AI Analysis Complete'}</Text>
             </View>
 
             <View style={styles.analysisGrid}>
               <View style={styles.analysisCol}>
-                <Text style={styles.analysisLabel}>Issue Type</Text>
+                <Text style={styles.analysisLabel}>{T.submit_issue_type || 'Issue Type'}</Text>
                 <Text style={styles.analysisVal}>{analysis.issue_type}</Text>
               </View>
               <View style={styles.analysisCol}>
-                <Text style={styles.analysisLabel}>Department</Text>
+                <Text style={styles.analysisLabel}>{T.submit_department || 'Department'}</Text>
                 <Text style={styles.analysisVal}>{analysis.department.split(' ')[0]}</Text>
               </View>
             </View>
 
             <View style={styles.analysisGrid}>
               <View style={styles.analysisCol}>
-                <Text style={styles.analysisLabel}>Urgency</Text>
+                <Text style={styles.analysisLabel}>{T.submit_urgency || 'Urgency'}</Text>
                 <Text style={styles.analysisVal}>{analysis.urgency}</Text>
               </View>
               <View style={styles.analysisCol}>
-                <Text style={styles.analysisLabel}>Language</Text>
+                <Text style={styles.analysisLabel}>{T.submit_language || 'Language'}</Text>
                 <Text style={styles.analysisVal}>{analysis.language === 'hi' ? 'Hindi / हिंदी' : 'English'}</Text>
               </View>
             </View>
 
             <View style={styles.summaryBox}>
-              <Text style={styles.summaryLabel}>Summary</Text>
+              <Text style={styles.summaryLabel}>{T.submit_ai_summary || 'Summary'}</Text>
               <Text style={styles.summaryVal}>{analysis.summary}</Text>
             </View>
           </View>
@@ -946,7 +946,7 @@ export default function SubmitScreen() {
             <View style={styles.orangeCircle}>
               <Text style={styles.orangeCircleText}>3</Text>
             </View>
-            <Text style={styles.sectionHeading}>Location Details</Text>
+            <Text style={styles.sectionHeading}>{T.submit_step3 || 'Location Details'}</Text>
           </View>
 
           <Pressable
@@ -960,11 +960,11 @@ export default function SubmitScreen() {
               <MapPin size={16} color="#ea580c" />
             )}
             <Text style={styles.gpsDetectBtnText}>
-              {detectingLocation ? 'Detecting Location...' : 'Auto-Detect Location (GPS)'}
+              {detectingLocation ? (T.submit_detecting_location || 'Detecting Location...') : (T.submit_gps_detect_btn || 'Auto-Detect Location (GPS)')}
             </Text>
           </Pressable>
 
-          <Text style={styles.inputLabel}>City *</Text>
+          <Text style={styles.inputLabel}>{T.submit_city || 'City'} *</Text>
           <View style={styles.cityBtnRow}>
             {['Delhi', 'Noida', 'Ghaziabad'].map(city => {
               const isSelected = form.city === city;
@@ -992,7 +992,7 @@ export default function SubmitScreen() {
           </View>
 
           <View style={{ marginTop: 12 }}>
-            <Text style={styles.inputLabel}>Area / Locality *</Text>
+            <Text style={styles.inputLabel}>{T.submit_area || 'Area / Locality'} *</Text>
             <Pressable
               onPress={() => {
                 setAreaSearchQuery('');
@@ -1001,18 +1001,18 @@ export default function SubmitScreen() {
               style={styles.dropdownSelectorBtn}
             >
               <Text style={[styles.dropdownSelectorText, !form.area && { color: '#9ca3af' }]}>
-                {form.area || `Select area in ${form.city}`}
+                {form.area || `${T.submit_select_area || 'Select area in'} ${form.city}`}
               </Text>
               <ChevronDown size={16} color="#64748b" />
             </Pressable>
           </View>
 
           <View style={{ marginTop: 12 }}>
-            <Text style={styles.inputLabel}>Ward</Text>
+            <Text style={styles.inputLabel}>{T.submit_ward || 'Ward'}</Text>
             <TextInput
               value={form.ward}
               editable={false}
-              placeholder="Auto-filled from area"
+              placeholder={T.submit_ward_auto || "Auto-filled from area"}
               style={[styles.textInput, styles.disabledInput]}
               placeholderTextColor="#9ca3af"
             />
@@ -1024,8 +1024,8 @@ export default function SubmitScreen() {
           <View style={styles.statusBox}>
             <ActivityIndicator size="small" color="#4f46e5" />
             <View style={{ flex: 1 }}>
-              <Text style={styles.statusTitle}>AI Context Audit Running</Text>
-              <Text style={styles.statusText}>Analyzing photo relevance & checking for spam...</Text>
+              <Text style={styles.statusTitle}>{T.submit_ai_audit_running || 'AI Context Audit Running'}</Text>
+              <Text style={styles.statusText}>{T.submit_ai_audit_text || 'Analyzing photo relevance & checking for spam...'}</Text>
             </View>
           </View>
         )}
@@ -1035,11 +1035,11 @@ export default function SubmitScreen() {
           <View style={[styles.statusBox, { backgroundColor: '#ecfdf5', borderColor: '#a7f3d0' }]}>
             <CheckCircle size={20} color="#10b981" />
             <View style={{ flex: 1 }}>
-              <Text style={[styles.statusTitle, { color: '#064e3b' }]}>AI Verification Passed</Text>
+              <Text style={[styles.statusTitle, { color: '#064e3b' }]}>{T.submit_ai_audit_passed || 'AI Verification Passed'}</Text>
               <Text style={[styles.statusText, { color: '#047857' }]}>
                 {llmResult.confidence === 'LOW' && llmResult.reason?.includes('unavailable')
-                  ? 'Validation service temporarily unavailable. Form submitted without AI verification.'
-                  : (llmResult.reason || 'Verified successfully.')}
+                  ? (lang === 'hi' ? 'सत्यापन सेवा अस्थायी रूप से अनुपलब्ध है। बिना AI सत्यापन के फॉर्म जमा किया गया।' : 'Validation service temporarily unavailable. Form submitted without AI verification.')
+                  : (llmResult.reason || (lang === 'hi' ? 'सफलतापूर्वक सत्यापित किया गया।' : 'Verified successfully.'))}
               </Text>
             </View>
           </View>
@@ -1069,12 +1069,12 @@ export default function SubmitScreen() {
             styles.submitBtnText,
             (!analysis) ? styles.submitBtnTextDisabled : styles.submitBtnTextActive
           ]}>
-            {llmValidating ? 'Verifying...' : submitting ? 'Submitting...' : 'Submit'}
+            {llmValidating ? (lang === 'hi' ? 'सत्यापित हो रहा है...' : 'Verifying...') : submitting ? (T.submit_submitting || 'Submitting...') : (T.submit_submit_btn || 'Submit')}
           </Text>
         </Pressable>
 
         {!analysis && (
-          <Text style={styles.analyzeHint}>Analyze your complaint with AI before submitting</Text>
+          <Text style={styles.analyzeHint}>{T.submit_analyze_first || 'Analyze your complaint with AI before submitting'}</Text>
         )}
       </ScrollView>
 
@@ -1089,12 +1089,12 @@ export default function SubmitScreen() {
           <View style={styles.modalContent}>
             {/* Modal Header */}
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Area / Locality</Text>
+              <Text style={styles.modalTitle}>{T.submit_area || 'Select Area / Locality'}</Text>
               <Pressable
                 onPress={() => setShowAreaModal(false)}
                 style={styles.modalCloseBtn}
               >
-                <Text style={styles.modalCloseBtnText}>Cancel</Text>
+                <Text style={styles.modalCloseBtnText}>{lang === 'hi' ? 'रद्द करें' : 'Cancel'}</Text>
               </Pressable>
             </View>
 
@@ -1103,7 +1103,7 @@ export default function SubmitScreen() {
               <TextInput
                 value={areaSearchQuery}
                 onChangeText={setAreaSearchQuery}
-                placeholder="Search area..."
+                placeholder={lang === 'hi' ? 'क्षेत्र खोजें...' : 'Search area...'}
                 placeholderTextColor="#94a3b8"
                 style={styles.modalSearchInput}
                 autoFocus={true}
