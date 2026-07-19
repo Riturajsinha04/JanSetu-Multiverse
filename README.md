@@ -71,6 +71,8 @@ npm run dev
 
 ### 4. Build and Install Android App via USB
 
+After connecting the via USB remember to enable developer option on your Phone by clicking build number 7 times in about phone section in settings. And also enable USB debugging.
+
 ```bash
 # Build the Release APK
 ./android/gradlew -p android assembleRelease --no-daemon
