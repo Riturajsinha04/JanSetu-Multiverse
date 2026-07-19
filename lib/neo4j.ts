@@ -1,7 +1,7 @@
-const NEO4J_HOST = "https://22dda832.databases.neo4j.io";
-const NEO4J_USER = "22dda832";
-const NEO4J_PASSWORD = "mqRd7eqHI8RLiSPPINT8q6dN2Hsfv0QHelwfMJZVUGA";
-const NEO4J_DATABASE = "22dda832";
+const NEO4J_HOST = process.env.EXPO_PUBLIC_NEO4J_URI || "https://22dda832.databases.neo4j.io";
+const NEO4J_USER = process.env.EXPO_PUBLIC_NEO4J_USERNAME || "22dda832";
+const NEO4J_PASSWORD = process.env.EXPO_PUBLIC_NEO4J_PASSWORD || "mqRd7eqHI8RLiSPPINT8q6dN2Hsfv0QHelwfMJZVUGA";
+const NEO4J_DATABASE = process.env.EXPO_PUBLIC_NEO4J_DATABASE || "22dda832";
 
 async function runCypher(statement: string, parameters: Record<string, unknown> = {}) {
   const auth = btoa(`${NEO4J_USER}:${NEO4J_PASSWORD}`);
